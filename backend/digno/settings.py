@@ -187,7 +187,6 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
-}
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
