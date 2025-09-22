@@ -8,6 +8,19 @@ class Article(models.Model):
     """
     Article model for news content.
     """
+    
+    # Category choices matching frontend navigation
+    CATEGORY_CHOICES = [
+        ('BREAKING_NEWS', 'Breaking News'),
+        ('ECONOMY', 'Economy'),
+        ('POLITICS', 'Politics'),
+        ('FOREIGN_AFFAIRS', 'Foreign Affairs'),
+        ('IMMIGRATION', 'Immigration'),
+        ('HUMAN_RIGHTS', 'Human Rights'),
+        ('LEGISLATION', 'Legislation'),
+        ('OPINION', 'Opinion'),
+    ]
+    
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     content = RichTextUploadingField()
@@ -15,6 +28,10 @@ class Article(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='articles')
     co_author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='co_authored_articles', blank=True, null=True, help_text="Optional co-author for collaborative articles")
     featured_image = models.ImageField(upload_to='articles/', blank=True, null=True)
+    
+    # Categorization and breaking news
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='POLITICS', help_text="Primary category for this article")
+    is_breaking_news = models.BooleanField(default=False, help_text="Mark as breaking news regardless of category")
     
     # Publishing
     is_published = models.BooleanField(default=False)

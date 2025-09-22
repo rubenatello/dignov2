@@ -7,8 +7,8 @@ from .models import Article
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'co_author_display', 'status_badge', 'published_date', 'view_count', 'created_date')
-    list_filter = ('is_published', 'published_date', 'created_date', 'author')
+    list_display = ('title', 'category', 'breaking_news_badge', 'author', 'co_author_display', 'status_badge', 'published_date', 'view_count', 'created_date')
+    list_filter = ('is_published', 'category', 'is_breaking_news', 'published_date', 'created_date', 'author')
     search_fields = ('title', 'content', 'summary', 'tags')
     prepopulated_fields = {'slug': ('title',)}
     date_hierarchy = 'published_date'
@@ -20,7 +20,11 @@ class ArticleAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'summary', 'content', 'featured_image'),
             'description': 'Main article content and media'
         }),
-    ('👤 Authors', {
+        ('📂 Classification', {
+            'fields': ('category', 'is_breaking_news'),
+            'description': 'Article category and breaking news status'
+        }),
+        ('👤 Authors', {
             'fields': ('author', 'co_author'),
             'description': 'Primary author and optional co-author'
         }),
@@ -31,7 +35,7 @@ class ArticleAdmin(admin.ModelAdmin):
         ('🔍 SEO & Categorization', {
             'fields': ('tags', 'meta_description'),
             'classes': ('collapse',),
-            'description': 'Search engine optimization and categorization'
+            'description': 'Search engine optimization and additional tags'
         }),
         ('📊 Statistics', {
             'fields': ('view_count', 'created_date', 'updated_date'),
@@ -67,6 +71,15 @@ class ArticleAdmin(admin.ModelAdmin):
             return obj.co_author.get_full_name() or obj.co_author.username
         return "-"
     co_author_display.short_description = 'Co-Author'
+    
+    def breaking_news_badge(self, obj):
+        """Display breaking news badge"""
+        if obj.is_breaking_news:
+            return format_html(
+                '<span style="background: #E74C3C; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;">🔥 BREAKING</span>'
+            )
+        return "-"
+    breaking_news_badge.short_description = 'Breaking'
     
     def status_badge(self, obj):
         """Display publication status with colored badge"""
