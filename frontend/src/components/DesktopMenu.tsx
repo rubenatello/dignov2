@@ -19,7 +19,8 @@ export default function DesktopMenu() {
           <Link 
             key={item}
             href={`/${item.toLowerCase().replace(/\s+/g, '-')}`}
-            className="text-sm font-medium text-gray-800 hover:text-black py-2 px-1 border-b-2 border-transparent hover:border-black transition-colors"
+            className="text-sm font-medium text-gray-800 hover:text-white py-2 px-1 border-b-2 border-transparent hover:border-white transition-colors"
+            style={{ textDecoration: 'none' }}
           >
             {item}
           </Link>

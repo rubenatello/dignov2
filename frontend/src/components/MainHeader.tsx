@@ -8,7 +8,7 @@ interface MainHeaderProps {
 export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
   return (
     <div className="max-w-7xl mx-auto px-4">
-      <div className="flex items-center justify-between py-4">
+  <div className="flex items-center justify-center py-4 md:justify-center">
         {/* Mobile Menu Button */}
         <button 
           className="md:hidden p-2"
@@ -20,7 +20,7 @@ export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
         </button>
 
         {/* Logo */}
-        <div className="flex-1 md:flex-none flex justify-center md:justify-start">
+  <div className="flex-1 flex justify-center">
           <Link href="/" className="flex items-center">
             <Image 
               src="/logo.png" 
