@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Digno Writer Dashboard{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+        <img src="{% static 'logo.png' %}" alt="Digno Logo" style="height:40px; margin-right:8px; vertical-align:middle;">
+        <span style="font-family: 'Georgia', serif; font-size: 2em; color: #222; font-weight: 700;">EDITOR</span>
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/custom_admin.css' %}">
+{% endblock %}

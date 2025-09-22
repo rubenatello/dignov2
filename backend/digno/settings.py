@@ -15,6 +15,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lamb
 
 # Application definition
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     
     # Third party apps
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'ckeditor',
     'ckeditor_uploader',
@@ -53,7 +55,7 @@ ROOT_URLCONF = 'digno.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -61,6 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'digno.context_processors.admin_dashboard_stats',
             ],
         },
     },
@@ -114,8 +117,43 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Jazzmin configuration for Digno branding
+JAZZMIN_SETTINGS = {
+    "site_title": "Digno Admin",
+    "site_header": "Digno Back Office",
+    "site_brand": "Digno",
+    "welcome_sign": "Welcome to Digno Admin",
+    "copyright": "Digno News",
+    "logo": "favicon.png",
+    "show_ui_builder": True,
+    "custom_links": {},
+    "search_model": ["articles.Article", "users.User"],
+    "use_google_fonts_cdn": False,
+    "hide_apps": [],
+    "hide_models": [],
+    "order_with_respect_to": ["articles", "users", "donations"],
+    "icons": {
+        "articles.Article": "fas fa-newspaper",
+        "users.User": "fas fa-user",
+        "donations.Donation": "fas fa-donate",
+    },
+    "default_icon_parents": "fas fa-folder-open",
+    "default_icon_children": "fas fa-file",
+    "related_modal_active": True,
+    "changeform_format": "horizontal_tabs",
+    "changeform_format_overrides": {},
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "custom_css": None,
+    "custom_js": None,
+    "show_ui_builder": True,
+    "theme": "default",
+    "dark_mode_theme": "darkly",
+}
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
@@ -139,6 +177,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+# Allow all origins in development for debugging
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+
 if not DEBUG:
     CORS_ALLOWED_ORIGINS.extend(
         config('CORS_ALLOWED_ORIGINS', default='', cast=lambda v: [s.strip() for s in v.split(',')] if v else [])
@@ -152,7 +195,7 @@ CKEDITOR_CONFIGS = {
         'toolbar_Custom': [
             ['Bold', 'Italic', 'Underline'],
             ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
-            ['Link', 'Unlink'],
+            ['Image', 'Table', 'HorizontalRule', 'Embed', 'Link', 'Unlink'],
             ['RemoveFormat', 'Source']
         ],
         'height': 400,
@@ -184,6 +227,11 @@ if not DEBUG:
     EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
     EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+
+# Django admin customization
+ADMIN_SITE_HEADER = "Digno Writer Dashboard"
+ADMIN_SITE_TITLE = "Digno"
+ADMIN_INDEX_TITLE = "Welcome to your writing dashboard"
 
 # Static files storage for production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

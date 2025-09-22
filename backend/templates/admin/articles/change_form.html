@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block object-tools %}
+    {{ block.super }}
+{% endblock %}
+
+{% block after_field_sets %}
+    {% if show_preview and preview_url %}
+        <div style="margin: 24px 0 0 0; text-align: right;">
+            <a href="{{ preview_url }}" target="_blank" class="button preview-button" style="background:#007cba;color:#fff;border-radius:6px;padding:8px 16px;">
+                👁️ Preview
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

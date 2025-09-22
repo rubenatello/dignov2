@@ -1,0 +1,4 @@
+/* Placeholder for article-specific admin CSS */
+.preview-button-container { text-align:center; margin: 12px 0; }
+.preview-button { background:#111; color:#fff; border-radius:6px; padding:8px 16px; border:none; }
+.preview-button:hover { background:#007cba; }

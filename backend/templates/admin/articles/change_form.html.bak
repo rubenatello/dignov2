@@ -1,0 +1,99 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        /* Enhanced styling for article edit form */
+        .form-row {
+            margin-bottom: 20px;
+        }
+        
+        .form-row .field-box {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #E1E8ED;
+        }
+        
+        .cke_chrome {
+            border-radius: 8px !important;
+            border: 2px solid #E1E8ED !important;
+        }
+        
+        .cke_top {
+            background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%) !important;
+            border-bottom: 1px solid #E1E8ED !important;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
+        .cke_toolbar {
+            background: transparent !important;
+        }
+        
+        .cke_button {
+            border-radius: 4px !important;
+        }
+        
+        .preview-button-container {
+            background: linear-gradient(135deg, #ECF0F1 0%, #BDC3C7 100%);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #D5DBDB;
+        }
+        
+        .preview-button {
+            background: #3498DB;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .preview-button:hover {
+            background: #2980B9;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+        
+        .fieldset h2 {
+            background: linear-gradient(135deg, #34495E 0%, #2C3E50 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+        }
+        
+        .fieldset {
+            border: 1px solid #E1E8ED;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .fieldset .module {
+            border: none;
+        }
+    </style>
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+    {% if show_preview and preview_url %}
+        <div class="preview-button-container">
+            <h3 style="margin-top: 0; color: #2C3E50;">👁️ Preview Your Article</h3>
+            <p style="color: #7F8C8D; margin-bottom: 15px;">See how your article will look when published</p>
+            <a href="{{ preview_url }}" target="_blank" class="preview-button">
+                🔍 Open Preview
+            </a>
+        </div>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

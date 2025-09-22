@@ -13,6 +13,7 @@ class Article(models.Model):
     content = RichTextUploadingField()
     summary = models.TextField(max_length=300, help_text="Brief summary of the article")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='articles')
+    co_author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='co_authored_articles', blank=True, null=True, help_text="Optional co-author for collaborative articles")
     featured_image = models.ImageField(upload_to='articles/', blank=True, null=True)
     
     # Publishing

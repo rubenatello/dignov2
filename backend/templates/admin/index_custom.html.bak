@@ -1,0 +1,201 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Digno Writer Dashboard{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        /* Clean professional styling for Digno admin */
+        #header {
+            background: #1a1a1a;
+            color: white;
+            border-bottom: 2px solid #007cba;
+        }
+        
+        .module h2, .module caption, .inline-group h2 {
+            background: #2b2b2b;
+            color: white;
+            border: none;
+        }
+        
+        #branding h1, #branding h1 a:link, #branding h1 a:visited {
+            color: white;
+            font-weight: 600;
+            font-size: 1.4em;
+        }
+        
+        .button, input[type=submit], input[type=button], .submit-row input, a.button {
+            background: #007cba;
+            border: none;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover, a.button:hover {
+            background: #005a87;
+            color: white;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #007cba;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+        
+        .quick-actions {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .quick-actions h3 {
+            margin-top: 0;
+            color: #1a1a1a;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-block;
+            font-weight: 500;
+            border: none;
+        }
+        
+        .action-button:hover {
+            background: #005a87;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .welcome-message {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007cba;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .welcome-message h2 {
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .welcome-message p {
+            color: #666;
+            margin: 0;
+        }
+        
+        /* Clean sidebar */
+        #nav-sidebar {
+            background: #2b2b2b;
+        }
+        
+        #nav-sidebar .module th {
+            background: #1a1a1a;
+        }
+        
+        #nav-sidebar .module th a {
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="welcome-message">
+        <h2>Welcome back, {{ user.first_name|default:user.username }}!</h2>
+        <p>Ready to create amazing content? Your writing dashboard is here to help you manage your articles efficiently.</p>
+    </div>
+    
+    <div class="dashboard-stats">
+        {% if user_articles is not None %}
+            <div class="stat-card">
+                <div class="stat-number">{{ user_articles }}</div>
+                <div class="stat-label">Your Articles</div>
+            </div>
+        {% endif %}
+        
+        {% if user_published is not None %}
+            <div class="stat-card">
+                <div class="stat-number">{{ user_published }}</div>
+                <div class="stat-label">Published</div>
+            </div>
+        {% endif %}
+        
+        {% if user_drafts is not None %}
+            <div class="stat-card">
+                <div class="stat-number">{{ user_drafts }}</div>
+                <div class="stat-label">Drafts</div>
+            </div>
+        {% endif %}
+        
+        {% if user.is_superuser and total_articles is not None %}
+            <div class="stat-card">
+                <div class="stat-number">{{ total_articles }}</div>
+                <div class="stat-label">Total Platform Articles</div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="quick-actions">
+        <h3>Quick Actions</h3>
+        <div class="action-buttons">
+            <a href="{% url 'admin:articles_article_add' %}" class="action-button">
+                Write New Article
+            </a>
+            <a href="{% url 'admin:articles_article_changelist' %}" class="action-button">
+                Manage Articles
+            </a>
+            {% if user.is_superuser %}
+                <a href="{% url 'admin:users_user_changelist' %}" class="action-button">
+                    Manage Users
+                </a>
+                <a href="{% url 'admin:donations_donation_changelist' %}" class="action-button">
+                    View Donations
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {{ block.super }}
+{% endblock %}

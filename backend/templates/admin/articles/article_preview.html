@@ -1,0 +1,176 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Preview: {{ article.title }}{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .article-preview {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .article-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+        
+        .article-meta {
+            color: #7F8C8D;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        
+        .article-summary {
+            font-size: 1.2em;
+            color: #34495E;
+            font-style: italic;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #ECF0F1;
+            border-left: 4px solid #E74C3C;
+            border-radius: 4px;
+        }
+        
+        .article-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .article-content {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #2C3E50;
+        }
+        
+        .article-content h1, .article-content h2, .article-content h3 {
+            color: #2C3E50;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .article-content h2 {
+            border-bottom: 2px solid #E74C3C;
+            padding-bottom: 5px;
+        }
+        
+        .article-content p {
+            margin-bottom: 15px;
+        }
+        
+        .article-content blockquote {
+            border-left: 4px solid #3498DB;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: #F8F9FA;
+            border-radius: 4px;
+        }
+        
+        .article-content ul, .article-content ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+        
+        .preview-actions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .preview-button {
+            background: #E74C3C;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        
+        .preview-button:hover {
+            background: #C0392B;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .tags {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ECF0F1;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: #3498DB;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="preview-actions">
+        <a href="{% url 'admin:articles_article_change' article.id %}" class="preview-button">
+            ✏️ Edit Article
+        </a>
+        <a href="{% url 'admin:articles_article_changelist' %}" class="preview-button">
+            📚 Back to Articles
+        </a>
+    </div>
+
+    <div class="article-preview">
+        <h1 class="article-title">{{ article.title }}</h1>
+        
+        <div class="article-meta">
+            <strong>By:</strong> {{ article.author.get_full_name|default:article.author.username }}
+            {% if article.co_author %}
+                and {{ article.co_author.get_full_name|default:article.co_author.username }}
+            {% endif %}
+            <br>
+            {% if article.is_published %}
+                <strong>Published:</strong> {{ article.published_date|date:"F j, Y" }}
+            {% else %}
+                <strong>Status:</strong> <span style="color: #F39C12;">Draft</span>
+            {% endif %}
+            <br>
+            <strong>Views:</strong> {{ article.view_count }}
+        </div>
+        
+        {% if article.featured_image %}
+            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="article-image">
+        {% endif %}
+        
+        <div class="article-summary">
+            {{ article.summary }}
+        </div>
+        
+        <div class="article-content">
+            {{ article.content|safe }}
+        </div>
+        
+        {% if article.tags %}
+            <div class="tags">
+                <strong>Tags:</strong><br>
+                {% for tag in article.tags_list %}
+                    <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
