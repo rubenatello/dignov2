@@ -11,7 +11,20 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+
+# Allow all hosts in dev for Codespaces proxy
+ALLOWED_HOSTS = ["*"]
+
+
+# Add Codespaces domains for CSRF protection
+# Add Codespaces domains for CSRF protection
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.app.github.dev',
+    'https://*.githubpreview.dev',
+]
+
+# Disable HTTPS redirect in dev to avoid proxy issues
+SECURE_SSL_REDIRECT = False
 
 # Application definition
 INSTALLED_APPS = [

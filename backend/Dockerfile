@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
+
+# Copy backend requirements and install
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
@@ -22,5 +23,5 @@ RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["gunicorn", "digno.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Run the Django development server for local development
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

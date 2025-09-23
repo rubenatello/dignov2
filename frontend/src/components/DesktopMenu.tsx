@@ -19,8 +19,14 @@ export default function DesktopMenu() {
           <Link 
             key={item}
             href={`/${item.toLowerCase().replace(/\s+/g, '-')}`}
-            className="text-sm font-medium text-gray-800 hover:text-white py-2 px-1 border-b-2 border-transparent hover:border-white transition-colors"
-            style={{ textDecoration: 'none' }}
+            className="text-sm font-medium text-gray-800 hover:text-blue-500 py-2 px-1 border-b-2 border-transparent hover:border-blue-300 transition-colors"
+            style={{ textDecoration: 'none', position: 'relative' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#60a5fa'; // Tailwind blue-400
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = '';
+            }}
           >
             {item}
           </Link>

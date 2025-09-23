@@ -8,12 +8,6 @@ Technology Stack
 Backend
 Django: The core of our backend. Chosen for its "batteries-included" philosophy, making it quick to develop and easy to scale. Its robust admin panel is a perfect foundation for our internal dashboard.
 SQLite (Development): A simple, file-based database for local development, allowing for quick setup without external dependencies.
-PostgreSQL (Production): A powerful, enterprise-grade relational database for production, providing reliability, data integrity, and performance. This will be the production database.
-Frontend
-Next.js: A React framework for building fast, modern web applications. Its file-based routing and server-side rendering capabilities are ideal for a content-heavy news site, improving SEO and initial load times.
-Tailwind CSS: A utility-first CSS framework for rapid and consistent styling. We will use it to build a modern, clean, and fully responsive UI.
-Key Libraries & Integrations
-Django REST Framework: To create the API endpoints that will serve data to our Next.js frontend.
 Quill.js or similar rich-text editor: For the article writer and editor. This is a crucial component that will provide a robust WYSIWYG (What You See Is What You Get) experience with features like:
 Draft saving
 Undo/redo functionality
@@ -31,15 +25,41 @@ Folder Structure (Proposed)
 │   ├── /dashboard      # Admin dashboard app
 │   └── manage.py
 │
-├── /frontend           # Next.js project
-│   ├── /app            # New App Router structure
-│   ├── /components     # Reusable React components
-│   ├── /lib            # Utility functions (API clients, etc.)
-│   ├── /styles         # Global styles and Tailwind config
+# Digno v2
+
+## Development: Docker-first
+
+To avoid Codespaces port forwarding and CORS/CSRF headaches, we run the full stack in Docker during development.
+
+### Database Configuration
+
+**🐘 PostgreSQL Database (Docker Environment)**
+- **Database**: PostgreSQL 15.14 running in Docker container
+- **Connection**: Django connects via `DATABASE_URL=postgresql://digno:digno123@db:5432/digno`
+- **Data Persistence**: All new content, users, and articles are stored in PostgreSQL
+- **Migration Status**: ✅ Migrated from SQLite with existing admin user and content
+
+**📝 Important**: We switched from SQLite to PostgreSQL for Docker development. All future data (articles, users, etc.) will be stored in the PostgreSQL container with persistent volumes.
+
+Quick start:
+
+1. Stop any local dev servers.
+2. From the repo root, build and start all services:
+
+```bash
+docker-compose up --build
+```
+
+3. Open the apps:
+   - Frontend: http://localhost:3000
+   - Backend API/DRF: http://localhost:8000/api/
+   - Django Admin: http://localhost:8000/admin/ (admin/admin123)
+
+Frontend API calls should use relative paths like `/api/articles/`. Next.js proxies these to Django via a rewrite. In Docker, the proxy targets the `web` service (http://web:8000); outside Docker, it targets `http://localhost:8000`.
+
+If you change `next.config.mjs`, restart the frontend dev server (or recompose) so rewrites take effect.│   ├── /app            # New App Router structure
 │   ├── public          # Static assets (images, fonts, etc.)
 │   └── tailwind.config.js
-│
-├── .gitignore
 ├── README.md
 ├── docker-compose.yml  # To be created for production
 └── requirements.txt    # Python dependencies
@@ -49,9 +69,6 @@ UI/UX Design
 Color Palette
 Primary: #516fff (A vibrant, professional blue)
 Secondary: #2d2d2d (A dark gray for text and backgrounds)
-Background/Accent: #fffbed (A soft, off-white for the main content area)
-Lighter Accent: #f8fbff (A very light blue/off-white for backgrounds and hover effects)
-Call-to-Action: #f78400ff (A warm orange to draw attention)
 Typography & Visuals
 The design should be clean, modern, and easy to read.
 We will use the provided logo.png and favicon.png for branding. - The site will be fully responsive, adapting to desktop, tablet, and mobile views.
