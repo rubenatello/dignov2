@@ -123,6 +123,22 @@ python manage.py runserver
 cd frontend
 npm install
 npm run dev
+
+---
+
+## Debugging & Troubleshooting
+
+- The frontend Dockerfile now installs `curl` for easier debugging and API connectivity checks between containers.
+- To test API connectivity from the frontend container:
+  1. Open a shell in the frontend container:
+     ```bash
+     docker-compose exec frontend sh
+     ```
+  2. Run:
+     ```bash
+     curl -v http://web:8000/api/articles/
+     ```
+  3. This should return the JSON response from the Django backend if networking is correct.
 ```
 
 ### Access Points

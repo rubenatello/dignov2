@@ -1,0 +1,18 @@
+# Next.js config file protocol
+
+- Only one Next.js config file should exist: either `next.config.js`, `next.config.mjs`, or `next.config.ts`.
+- Your project now uses `next.config.ts` as the single source of truth for all Next.js configuration (rewrites, trailingSlash, etc).
+- Remove any other config files to avoid conflicts.
+- After changes to the config, always rebuild and restart your frontend Docker container.
+
+## Rebuild instructions
+
+1. Run:
+   ```sh
+   docker-compose build frontend
+   docker-compose up
+   ```
+2. This ensures the new config is picked up and all rewrites/proxy rules are applied.
+
+## Reference
+- See `frontend/next.config.ts` for all Next.js config logic.

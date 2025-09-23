@@ -1,0 +1,31 @@
+# Digno Dev Notes
+
+## Docker Networking for API Calls
+
+- In Docker Compose, the frontend (Next.js) and backend (Django) containers communicate using service names as hostnames.
+- The axios client in `frontend/src/lib/api.ts` is hardcoded to use `http://web:8000/api/` as the base URL for all API calls.
+- This ensures reliable connectivity in Docker, since `web` is the backend service name.
+- For local development (outside Docker), you can switch the baseURL to `/api/` and use Next.js rewrites, or set `NEXT_PUBLIC_API_URL` to `http://localhost:8000/api/`.
+
+
+## API Proxy Status
+
+- As of September 23, 2025, the API proxy is working correctly.
+- You can access your Django API at http://localhost:3000/api/articles/ and receive a valid JSON response from the backend via the Next.js rewrite.
+
+## Debugging API Connectivity
+
+- To test API connectivity from the frontend container:
+  1. Open a shell in the frontend container:
+     ```sh
+     docker-compose exec frontend sh
+     ```
+  2. Run:
+     ```sh
+     curl -v http://web:8000/api/articles/
+     ```
+  3. You should see a JSON response from the backend if networking is correct.
+
+## Reference
+- See `frontend/src/lib/api.ts` for the current axios configuration.
+- See `frontend/next.config.mjs` for Next.js rewrite rules (used for local/dev, not Docker).
