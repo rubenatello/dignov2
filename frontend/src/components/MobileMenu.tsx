@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import SearchBar from './SearchBar';
 
 const menuItems = [
   'BREAKING NEWS',
@@ -26,12 +27,7 @@ export default function MobileMenu({ isOpen, onItemClick }: MobileMenuProps) {
         <Link href="/" className="flex items-center">
           <img src="/logo.png" alt="Digno" className="h-8 w-auto" />
         </Link>
-        <button className="text-gray-700 hover:text-blue-500" aria-label="Search">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </button>
+        <SearchBar onClose={onItemClick} />
       </div>
       {/* Subscribe & Login */}
       <div className="flex flex-col items-center py-4 border-b border-gray-100">

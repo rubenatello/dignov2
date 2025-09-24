@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import SearchBar from './SearchBar';
 
 interface MainHeaderProps {
   onMobileMenuToggle: () => void;
@@ -34,12 +35,7 @@ export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
 
         {/* Desktop Search */}
         <div className="hidden md:flex space-x-4">
-          <button className="text-sm text-gray-700 hover:text-black font-medium" aria-label="Search">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </button>
+          <SearchBar />
         </div>
       </div>
     </div>

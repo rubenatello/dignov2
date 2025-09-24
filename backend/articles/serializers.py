@@ -12,14 +12,19 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'bio', 'is_staff']
 
 class ArticleListSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = serializers.SerializerMethodField()
     tags_list = serializers.ReadOnlyField()
+    
+    def get_author(self, obj):
+        if obj.author:
+            return obj.author.get_full_name() or obj.author.username
+        return "Unknown Author"
     
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'slug', 'summary', 'author', 'featured_image',
-            'published_date', 'view_count', 'tags_list', 'meta_description'
+            'published_date', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news'
         ]
 
 class ArticleDetailSerializer(serializers.ModelSerializer):

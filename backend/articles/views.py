@@ -27,6 +27,18 @@ class ArticleViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated and self.request.user.is_staff:
             queryset = Article.objects.all().select_related('author')
         
+        # Handle search query
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(summary__icontains=search_query) |
+                Q(content__icontains=search_query) |
+                Q(author__first_name__icontains=search_query) |
+                Q(author__last_name__icontains=search_query)
+            )
+        
         # Filter by tags if provided
         tags = self.request.query_params.get('tags', None)
         if tags:
