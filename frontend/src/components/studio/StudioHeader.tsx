@@ -1,4 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+
+interface ChangeLogEntry {
+  user: string;
+  message: string;
+  ts: string;
+}
 
 interface StudioHeaderProps {
   onUndo: () => void;
@@ -7,6 +13,7 @@ interface StudioHeaderProps {
   versions: string[];
   onVersionSelect: (version: string) => void;
   saveStatus?: 'saved' | 'saving' | 'error' | null;
+  history?: ChangeLogEntry[];
 }
 
 export default function StudioHeader({
@@ -16,7 +23,9 @@ export default function StudioHeader({
   versions,
   onVersionSelect,
   saveStatus = null,
+  history = [],
 }: StudioHeaderProps) {
+  const [showLog, setShowLog] = useState(false);
   const SaveStatusIndicator = () => {
     const statusConfig = {
       saved: { icon: '✓', text: 'Saved', class: 'text-green-600 bg-green-50' },
@@ -76,6 +85,13 @@ export default function StudioHeader({
             Digno Studio
           </h1>
           <SaveStatusIndicator />
+          <button
+            className="ml-4 px-3 py-1 rounded bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 border border-slate-200 shadow-sm"
+            onClick={() => setShowLog(true)}
+            title="Show Change Log"
+          >
+            Change Log
+          </button>
         </div>
 
         {/* Center - Quick Actions */}
@@ -110,7 +126,6 @@ export default function StudioHeader({
               </select>
             </div>
           )}
-          
           {/* User dropdown placeholder */}
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
@@ -120,6 +135,28 @@ export default function StudioHeader({
           </div>
         </div>
       </div>
+      {/* Change Log Popup */}
+      {showLog && (
+        <div className="absolute right-6 top-16 z-50 flex items-start justify-end">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md border border-slate-200">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-slate-700">Recent Changes</h2>
+              <button className="text-slate-500 hover:text-slate-700" onClick={() => setShowLog(false)}>&times;</button>
+            </div>
+            <ul className="space-y-2">
+              {history.slice(-5).reverse().map((entry, idx) => (
+                <li key={idx} className="border-b pb-2 last:border-b-0">
+                  <div className="text-sm text-slate-800 font-medium">{entry.message}</div>
+                  <div className="text-xs text-slate-500">{entry.user} &middot; {new Date(entry.ts).toLocaleString()}</div>
+                </li>
+              ))}
+              {history.length === 0 && (
+                <li className="text-sm text-slate-500">No changes yet.</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

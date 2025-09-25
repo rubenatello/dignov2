@@ -1,4 +1,14 @@
+
 "use client";
+
+// Slugify helper for preview/save
+function slugify(str: string): string {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -59,7 +69,14 @@ export default function StudioPage() {
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | null>(null);
   const [authorId, setAuthorId] = useState<number | null>(null);
   const [coAuthorId, setCoAuthorId] = useState<number | null>(null);
-  const [history, setHistory] = useState<{ message: string; ts: string }[]>([]);
+  const [history, setHistory] = useState<{ user: string; message: string; ts: string }[]>([]);
+  const [currentUser, setCurrentUser] = useState<string>('');
+  // Fetch current user for change log
+  useEffect(() => {
+    studioAPI.getCurrentUser().then(user => {
+      setCurrentUser(user.username || user.email || 'unknown');
+    }).catch(() => setCurrentUser('unknown'));
+  }, []);
   const [featuredImageAssetId, setFeaturedImageAssetId] = useState<number | null>(null);
   const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
   const [featuredPreviewUrl, setFeaturedPreviewUrl] = useState<string | null>(null);
@@ -73,8 +90,43 @@ export default function StudioPage() {
   const handleAutoSave = async (currentArticle: Partial<Article>) => {
     if (!currentArticle.title && !currentArticle.content) return;
     setSaveStatus('saving');
-    // Client-side setup is no longer needed for Quill
+    try {
+      const payload = assembleArticlePayload();
+      const savedArticle = await studioAPI.saveDraft(payload);
+      setArticle(savedArticle);
+      setSaveStatus('saved');
+      setAutosaveTime(new Date().toLocaleTimeString());
+      pushHistory('autosaved');
+    } catch (error) {
+      setSaveStatus('error');
+    }
   };
+
+  // Debounced autosave (for rapid changes)
+  const scheduleDebouncedAutoSave = (currentArticle: Partial<Article>) => {
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      handleAutoSave(currentArticle);
+    }, 1200); // 1.2s debounce for rapid typing
+  };
+
+  // Autosave every 20 seconds
+  useEffect(() => {
+    if (!role || !["writer", "editor", "admin"].includes(role)) return;
+    const interval = setInterval(() => {
+      handleAutoSave(article);
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [role, article]);
+
+  // Autosave on blur (when leaving editor)
+  useEffect(() => {
+    const handleBlur = () => {
+      handleAutoSave(article);
+    };
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, [article]);
 
   useEffect(() => {
     if (!role) return;
@@ -147,13 +199,28 @@ export default function StudioPage() {
     alert('Scheduling feature coming soon!');
   };
 
-  const handlePreview = () => {
-    // TODO: Implement preview functionality
-    alert('Preview feature coming soon!');
+  const handlePreview = async () => {
+    // Validate required fields before saving draft for preview
+    if (!article.title || !article.content) {
+      alert('Please enter a title and content before previewing.');
+      return;
+    }
+    const previewSlug = slugify(article.title);
+    // Save draft first, wait for completion
+    try {
+      await handleSaveDraft();
+      // Small delay to ensure backend is updated (optional, can be tuned)
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      window.open(`/articles/preview/${previewSlug}`, '_blank');
+      pushHistory('previewed article');
+    } catch (err) {
+      // Optionally show error to user
+      alert('Failed to save draft before preview. Please try again.');
+    }
   };
 
   const pushHistory = (message: string) => {
-    setHistory(prev => [...prev.slice(-49), { message, ts: new Date().toISOString() }]);
+    setHistory(prev => [...prev.slice(-49), { user: currentUser, message, ts: new Date().toISOString() }]);
   };
 
   if (!role) {
