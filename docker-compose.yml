@@ -29,6 +29,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - next_build_cache:/app/.next
     ports:
       - "3000:3000"
     environment:
@@ -36,3 +37,4 @@ services:
 
 volumes:
   postgres_data:
+  next_build_cache:

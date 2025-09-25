@@ -64,20 +64,6 @@ export default function EditorPage() {
 
   const publishArticle = async () => {
     if (!article.title || !article.summary || !article.content) {
-      setMessage('Please fill in title, summary, and content before publishing');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const response = await api.post('/articles/', {
-        ...article,
-        is_published: true
-      });
-      setMessage('Article published successfully!');
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
     } catch (error) {
       console.error('Failed to publish article:', error);
       setMessage('Failed to publish article');

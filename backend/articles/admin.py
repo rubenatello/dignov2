@@ -3,10 +3,101 @@ from django.utils.html import format_html
 from django.urls import path, reverse
 from django.template.response import TemplateResponse
 from django.http import Http404
-from .models import Article
+from .models import Article, Image
+
+
+@admin.register(Image)
+class ImageAdmin(admin.ModelAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+    list_display = ['title', 'image_thumbnail', 'source', 'dimensions', 'file_size_mb', 'usage_count', 'uploaded_by', 'created_date']
+    list_filter = ['source', 'created_date', 'uploaded_by']
+    search_fields = ['title', 'description', 'alt_text', 'source']
+    readonly_fields = ['width', 'height', 'file_size', 'usage_count', 'created_date', 'updated_date', 'image_preview']
+    ordering = ['-created_date']
+    
+    def image_thumbnail(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="60" height="60" style="object-fit: cover; border-radius: 4px;">', obj.image.url)
+        return "No image"
+    image_thumbnail.short_description = "Thumbnail"
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-width: 400px; max-height: 400px; border-radius: 8px;">', obj.image.url)
+        return "No image"
+    image_preview.short_description = "Preview"
+    
+    def dimensions(self, obj):
+        if obj.width and obj.height:
+            return f"{obj.width} × {obj.height}"
+        return "Unknown"
+    dimensions.short_description = "Dimensions"
+    
+    def file_size_mb(self, obj):
+        if obj.file_size:
+            return f"{obj.file_size / 1024 / 1024:.2f} MB"
+        return "Unknown"
+    file_size_mb.short_description = "File Size"
+    
+    fieldsets = (
+        ('🖼️ Image Upload', {
+            'fields': ('image', 'title', 'description', 'alt_text'),
+            'description': 'Upload and describe your image'
+        }),
+        ('📰 Source Attribution', {
+            'fields': ('source', 'source_url'),
+            'description': 'Credit the source of this image'
+        }),
+        ('🔍 Preview', {
+            'fields': ('image_preview',),
+            'classes': ('collapse',)
+        }),
+        ('📊 Metadata', {
+            'fields': ('width', 'height', 'file_size', 'usage_count'),
+            'classes': ('collapse',),
+            'description': 'Automatically populated image information'
+        }),
+        ('📅 Timestamps', {
+            'fields': ('created_date', 'updated_date'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # If creating new image
+            obj.uploaded_by = request.user
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
+    def has_module_permission(self, request):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
     list_display = ('title', 'category', 'breaking_news_badge', 'author', 'co_author_display', 'status_badge', 'published_date', 'view_count', 'created_date')
     list_filter = ('is_published', 'category', 'is_breaking_news', 'published_date', 'created_date', 'author')
     search_fields = ('title', 'content', 'summary', 'tags')
@@ -17,8 +108,12 @@ class ArticleAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('✍️ Content', {
-            'fields': ('title', 'slug', 'summary', 'content', 'featured_image'),
-            'description': 'Main article content and media'
+            'fields': ('title', 'slug', 'summary', 'content'),
+            'description': 'Main article content'
+        }),
+        ('🖼️ Featured Image', {
+            'fields': ('featured_image_asset', 'featured_image'),
+            'description': 'Choose from image library or upload directly'
         }),
         ('📂 Classification', {
             'fields': ('category', 'is_breaking_news'),

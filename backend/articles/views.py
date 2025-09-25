@@ -3,14 +3,56 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import Article
-from .serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer
+from .models import Article, Image
+from .serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer, ImageSerializer
+from .permissions import IsWriterOrEditorOrReadOnly
+
+class ImageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for handling Image CRUD operations.
+    """
+    queryset = Image.objects.all().select_related('uploaded_by').order_by('-created_date')
+    serializer_class = ImageSerializer
+    permission_classes = [IsWriterOrEditorOrReadOnly]
+    
+    def get_queryset(self):
+        queryset = self.queryset
+        
+        # Handle search query
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(source__icontains=search_query) |
+                Q(alt_text__icontains=search_query)
+            )
+        
+        # Filter by source if provided
+        source = self.request.query_params.get('source', None)
+        if source:
+            queryset = queryset.filter(source__icontains=source)
+        
+        return queryset
+    
+    def perform_create(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def recent(self, request):
+        """Get most recently uploaded images"""
+        recent_images = self.get_queryset()[:20]
+        serializer = self.get_serializer(recent_images, many=True)
+        return Response(serializer.data)
+
 
 class ArticleViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling Article CRUD operations.
     """
     queryset = Article.objects.filter(is_published=True).select_related('author')
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsWriterOrEditorOrReadOnly]
     lookup_field = 'slug'
     
     def get_serializer_class(self):

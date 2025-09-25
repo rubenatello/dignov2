@@ -3,6 +3,84 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.urls import reverse
 from ckeditor_uploader.fields import RichTextUploadingField
+from PIL import Image as PILImage
+import os
+
+class Image(models.Model):
+    """
+    Reusable Image model for article media with automatic captioning and source attribution.
+    """
+    
+    # Image file and metadata
+    image = models.ImageField(upload_to='images/%Y/%m/', help_text="Upload image file")
+    title = models.CharField(max_length=200, help_text="Internal title for organizing images")
+    description = models.TextField(max_length=500, help_text="Caption/description that appears with the image")
+    alt_text = models.CharField(max_length=255, help_text="Alt text for accessibility")
+    
+    # Source attribution
+    source = models.CharField(max_length=200, help_text="Photo credit/source (e.g., 'Laura Buckman/AFP via Getty Images')")
+    source_url = models.URLField(blank=True, help_text="Optional link to original source")
+    
+    # Image properties (auto-populated)
+    width = models.PositiveIntegerField(blank=True, null=True)
+    height = models.PositiveIntegerField(blank=True, null=True)
+    file_size = models.PositiveIntegerField(blank=True, null=True, help_text="File size in bytes")
+    
+    # Metadata
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='uploaded_images')
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+    
+    # Usage tracking
+    usage_count = models.PositiveIntegerField(default=0, help_text="Number of times this image has been used")
+    
+    class Meta:
+        ordering = ['-created_date']
+        indexes = [
+            models.Index(fields=['-created_date']),
+            models.Index(fields=['uploaded_by', '-created_date']),
+        ]
+    
+    def save(self, *args, **kwargs):
+        # Resize image if too large and set width, height, file_size
+        MAX_WIDTH = 1200
+        MAX_HEIGHT = 800
+        if self.image:
+            try:
+                img_path = self.image.path if hasattr(self.image, 'path') else None
+                if img_path and os.path.exists(img_path):
+                    with PILImage.open(img_path) as img:
+                        # Resize if needed
+                        if img.width > MAX_WIDTH or img.height > MAX_HEIGHT:
+                            img.thumbnail((MAX_WIDTH, MAX_HEIGHT), PILImage.LANCZOS)
+                            img.save(img_path, optimize=True, quality=85)
+                        self.width, self.height = img.size
+                    self.file_size = os.path.getsize(img_path)
+            except Exception:
+                pass  # Silently handle any image processing errors
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.title} ({self.source})"
+    
+    @property
+    def formatted_caption(self):
+        """Returns formatted caption with source attribution"""
+        if self.source:
+            return f"{self.description} Photo: {self.source}"
+        return self.description
+    
+    @property 
+    def aspect_ratio(self):
+        """Calculate aspect ratio for responsive display"""
+        if self.width and self.height:
+            return self.width / self.height
+        return None
+    
+    def increment_usage(self):
+        """Track how many times this image has been used"""
+        self.usage_count += 1
+        self.save(update_fields=['usage_count'])
 
 class Article(models.Model):
     """
@@ -27,7 +105,10 @@ class Article(models.Model):
     summary = models.TextField(max_length=300, help_text="Brief summary of the article")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='articles')
     co_author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='co_authored_articles', blank=True, null=True, help_text="Optional co-author for collaborative articles")
-    featured_image = models.ImageField(upload_to='articles/', blank=True, null=True)
+    
+    # Featured image - can use either direct upload or reference to Image model
+    featured_image = models.ImageField(upload_to='articles/', blank=True, null=True, help_text="Direct image upload")
+    featured_image_asset = models.ForeignKey('Image', on_delete=models.SET_NULL, blank=True, null=True, related_name='featured_in_articles', help_text="Use image from media library")
     
     # Categorization and breaking news
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='POLITICS', help_text="Primary category for this article")
@@ -60,6 +141,18 @@ class Article(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def get_featured_image(self):
+        """Get the featured image, prioritizing featured_image_asset over direct upload"""
+        if self.featured_image_asset:
+            return self.featured_image_asset.image
+        return self.featured_image
+    
+    def get_featured_image_caption(self):
+        """Get caption for the featured image"""
+        if self.featured_image_asset:
+            return self.featured_image_asset.formatted_caption
+        return ""
     
     def get_absolute_url(self):
         return reverse('article-detail', kwargs={'slug': self.slug})

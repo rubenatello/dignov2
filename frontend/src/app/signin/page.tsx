@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -21,8 +23,8 @@ export default function SignInPage() {
       }
       // Redirect or set auth state
       router.push('/');
-    } catch (err: any) {
-      setError(err.message || 'Sign in failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Sign in failed');
     }
   };
 

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 
 export default function SubscribePage() {
@@ -22,8 +24,8 @@ export default function SubscribePage() {
       });
       if (!response.ok) throw new Error('Payment failed');
       setSuccess('Thank you for subscribing!');
-    } catch (err: any) {
-      setError(err.message || 'Subscription failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Subscription failed');
     } finally {
       setLoading(false);
     }

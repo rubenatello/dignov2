@@ -151,6 +151,7 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": ["articles", "users", "donations"],
     "icons": {
         "articles.Article": "fas fa-newspaper",
+        "articles.Image": "fas fa-image",
         "users.User": "fas fa-user",
         "donations.Donation": "fas fa-donate",
     },

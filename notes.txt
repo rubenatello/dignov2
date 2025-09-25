@@ -1,4 +1,96 @@
+## Known Issues
+
+- As of September 24, 2025, the ContentEditor (Tiptap) in the Studio page is not editable (cannot type in the main editor area). This is likely due to a React hydration or Tiptap initialization issue. The toolbar and UI render, but typing is not possible. This needs to be debugged and fixed after API/backend integration is solid.
+
+## Major Architecture Changes
+
+**September 25, 2025 - APPROVED SWITCH FROM TIPTAP TO QUILL ✅ COMPLETED + UI REFINEMENTS**
+- User approved switching from Tiptap to Quill for the Studio content editor
+- Reason: Tiptap required extensive custom CSS and toolbar configuration, while Quill provides professional UI out-of-the-box
+- Goal: Achieve Substack-like editor experience with clean styling and reliable formatting
+- Impact: Frontend package.json changes, new QuillEditor component, removal of Tiptap dependencies
+- Status: ✅ COMPLETED - QuillEditor successfully integrated, React 19 compatibility resolved with direct Quill.js implementation
+
+**UI Refinements Completed:**
+- ✅ Removed clashing blue sidebar border line for cleaner look
+- ✅ Fixed duplicate toolbar issue (only one toolbar now shows)  
+- ✅ Added image functionality with library modal and upload options
+- ✅ Removed gray border lines from content editor for cleaner appearance
+- ✅ Enhanced toolbar with image insertion capability
+- ✅ Added matching light blue gradient background (same as loading page)
+- ✅ Removed heavy shadow and rounded corners for unified form appearance
+- ✅ Fixed Quill editor initialization to prevent duplicate toolbars
+
 # Digno Dev Notes
+
+## Standard Development Startup (ALWAYS REFERENCE THIS)
+
+Canonical way to run the full stack (frontend + backend + db):
+
+```bash
+docker-compose up --build
+```
+
+Services:
+- frontend  -> http://localhost:3000 (Next.js dev server)
+- web       -> http://localhost:8000 (Django runserver)
+- db        -> Postgres 15 (hostname inside network: db)
+
+Do NOT normally run `npm run dev` (frontend) or `python manage.py runserver` (backend) directly on the host—those bypass container networking & env consistency.
+
+### Quick Commands
+Migrations:
+```bash
+docker-compose exec web python manage.py makemigrations
+docker-compose exec web python manage.py migrate
+```
+
+Create superuser:
+```bash
+docker-compose exec web python manage.py createsuperuser
+```
+
+Add frontend dependency:
+```bash
+docker-compose exec frontend sh
+npm install <package>
+```
+
+Add backend dependency:
+1. Edit `backend/requirements.txt`
+2. Rebuild web layer:
+```bash
+docker-compose build web
+docker-compose up -d web
+```
+
+Clean rebuild (fix cache, perms, node_modules issues):
+```bash
+docker-compose down -v
+docker-compose up --build
+```
+
+Tail logs:
+```bash
+docker-compose logs -f web
+docker-compose logs -f frontend
+```
+
+### Health Checks
+```bash
+docker-compose ps
+curl -I http://localhost:3000
+curl -I http://localhost:8000/api/
+```
+
+### Permission / EPERM on .next
+Should be solved by non-root user in updated Dockerfile. If it recurs: clean rebuild (above).
+
+### API Base URL Logic (current)
+Inside Docker: axios uses `http://web:8000/api/` directly.
+Outside Docker (future optional improvement): allow `NEXT_PUBLIC_API_URL` or fallback to rewrite `/api/*`.
+
+---
 
 ## Docker Networking for API Calls
 
@@ -29,3 +121,5 @@
 ## Reference
 - See `frontend/src/lib/api.ts` for the current axios configuration.
 - See `frontend/next.config.mjs` for Next.js rewrite rules (used for local/dev, not Docker).
+
+Always consult this `notes.txt` before starting or troubleshooting.

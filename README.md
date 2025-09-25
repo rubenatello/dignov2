@@ -161,3 +161,61 @@ The project is configured for:
 - **Railway**: Django backend + PostgreSQL
 - **Vercel**: Next.js frontend
 - **Estimated Cost**: $10-20/month for small production site
+
+---
+
+## Docker Workflow Clarification
+
+You normally should NOT start the frontend with `npm run dev` on the host. The canonical dev workflow is Docker-first:
+
+```bash
+docker-compose up --build
+```
+
+That launches:
+
+- `db` (Postgres 15)
+- `web` (Django runserver with live reload)
+- `frontend` (Next.js dev server on port 3000)
+
+### Why you saw `npm run dev`
+In some earlier notes / commands, `npm run dev` was invoked directly for quick validation outside the container. That's fine for a one-off test, but it can diverge from the container environment (env vars, network hostnames, permissions) and produce issues like `EPERM` on `.next`.
+
+### Frontend Container Details
+- Command (compose): `HOST=0.0.0.0 PORT=3000 npm run dev`
+- Bind mounts: your local `frontend/` sources -> `/app` inside the container
+- Anonymous volume: `/app/node_modules` (keeps container node_modules isolated from host)
+
+### Adding Dependencies (Preferred Way)
+```bash
+docker-compose exec frontend sh
+npm install <package>
+```
+Commit the updated `package.json` (and lock if present). Rebuild if needed:
+```bash
+docker-compose up --build frontend
+```
+
+### Fixing Permission or Cache Issues
+```bash
+docker-compose down -v
+docker-compose up --build
+```
+
+### Production Image (Optional)
+Use `frontend/Dockerfile.prod` as a multi-stage reference:
+```bash
+docker build -f frontend/Dockerfile.prod -t digno-frontend:prod ./frontend
+```
+
+### Local (Non-Docker) Override (Not Recommended)
+Only if you intentionally want to bypass Docker for ultra-fast iteration (remember to point API calls to `http://localhost:8000`):
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+If you see any inconsistency in commands in docs vs. your workflow, follow the Docker one—it's the source of truth.
