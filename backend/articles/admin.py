@@ -98,7 +98,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser or getattr(request.user, 'role', None) in ('writer', 'editor')
-    list_display = ('title', 'category', 'breaking_news_badge', 'author', 'co_author_display', 'status_badge', 'published_date', 'view_count', 'created_date')
+    list_display = ('id', 'title', 'category', 'breaking_news_badge', 'author', 'co_author_display', 'status_badge', 'published_date', 'view_count', 'created_date')
     list_filter = ('is_published', 'category', 'is_breaking_news', 'published_date', 'created_date', 'author')
     search_fields = ('title', 'content', 'summary', 'tags')
     prepopulated_fields = {'slug': ('title',)}

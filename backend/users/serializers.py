@@ -4,11 +4,11 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.ReadOnlyField()
-    
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'bio', 'is_staff']
+        # include role so the frontend can filter/use it
+        fields = ("id", "first_name", "last_name", "email", "role")
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()

@@ -24,9 +24,9 @@ export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
   <div className="flex-1 flex justify-center">
           <Link href="/" className="flex items-center">
             <Image 
-              src="/logo.png" 
+              src="/digno-logo.svg" 
               alt="Digno" 
-              width={180} 
+              width={220} 
               height={60}
               className="h-12 w-auto"
             />

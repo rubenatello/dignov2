@@ -62,7 +62,7 @@ class ArticleListSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             'id', 'title', 'slug', 'summary', 'author', 'featured_image_data',
-            'published_date', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news'
+            'published_date', 'scheduled_publish_time', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news'
         ]
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
@@ -85,7 +85,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             'id', 'title', 'slug', 'content', 'summary', 'author', 'featured_image_data',
-            'published_date', 'created_date', 'updated_date', 'view_count', 'tags_list', 'meta_description'
+            'published_date', 'scheduled_publish_time', 'created_date', 'updated_date', 'view_count', 'tags_list', 'meta_description'
         ]
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
@@ -97,7 +97,7 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
             # Featured image (either direct upload OR library asset reference)
             'featured_image', 'featured_image_asset',
             # Publication & categorization
-            'is_published', 'category', 'is_breaking_news',
+            'is_published', 'category', 'is_breaking_news', 'scheduled_publish_time',
             # Tagging / SEO
             'tags', 'meta_description',
             # Collaboration

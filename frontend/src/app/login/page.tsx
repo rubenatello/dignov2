@@ -20,11 +20,11 @@ export default function LoginPage() {
     try {
       const success = await login(username, password);
       if (success) {
-        router.push('/editor');
+        router.push('/studio');
       } else {
         setError('Invalid username or password');
       }
-    } catch (error) {
+      } catch {
       setError('Login failed. Please try again.');
     } finally {
       setLoading(false);

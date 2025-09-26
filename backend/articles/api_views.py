@@ -13,7 +13,7 @@ class ArticleSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Article
-        fields = ['id', 'title', 'summary', 'category', 'is_breaking_news', 'author', 'published_date', 'slug', 'featured_image']
+        fields = ['id', 'title', 'summary', 'category', 'is_breaking_news', 'author', 'published_date', 'slug', 'featured_image', 'is_published']
 
 class ArticleListAPIView(generics.ListAPIView):
     serializer_class = ArticleSerializer

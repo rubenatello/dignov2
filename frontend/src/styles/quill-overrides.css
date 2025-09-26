@@ -3,84 +3,36 @@
 
 /* Increase specificity for Quill toolbar overrides */
 .quill-editor-container .ql-toolbar {
-  border: none !important;
-  background: transparent !important;
-  padding: 0 0 8px 0 !important;
-  margin-bottom: 24px !important;
-  border-radius: 0 !important;
-  box-shadow: 0 2px 8px rgba(0, 60, 255, 0.06) !important;
-  border-bottom: 2px solid #e3e8f0 !important;
-  position: relative !important;
-  z-index: 10 !important;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 0 !important;
-  min-height: 40px !important;
+  
 }
 
 
 .quill-editor-container .ql-toolbar button {
-  border-radius: 6px !important;
-  padding: 6px !important;
-  margin: 0 2px !important;
-  transition: background 0.18s cubic-bezier(.4,0,.2,1), box-shadow 0.18s cubic-bezier(.4,0,.2,1), color 0.18s cubic-bezier(.4,0,.2,1) !important;
-  border: 1px solid transparent !important;
-  color: #222e3a !important;
-  background: transparent !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-shadow: none !important;
+  
 }
 
 
 .quill-editor-container .ql-toolbar button svg {
-  width: 18px !important;
-  height: 18px !important;
-  color: #222e3a !important;
+  
 }
 
 
 .quill-editor-container .ql-toolbar button:hover {
-  background: #f1f5fa !important;
-  color: #2563eb !important;
-  border-color: #2563eb !important;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.08) !important;
 }
 
 
 .quill-editor-container .ql-toolbar button.ql-active {
-  background: #2563eb !important;
-  color: #fff !important;
-  border-color: #2563eb !important;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.18) !important;
-  font-weight: 600 !important;
-  margin-right: 16px !important;
-  /* Add spacing between toolbar groups */
+  
 }
 
 
 
 .quill-editor-container .ql-toolbar .ql-picker-label {
-  font-size: 1rem !important;
-  font-weight: 500 !important;
-  color: #222e3a !important;
-  background: transparent !important;
-  border-radius: 6px !important;
-  padding: 6px 12px !important;
-  margin: 0 2px !important;
+  
 }
 
 .quill-editor-container .ql-container {
-  border: none !important;
-  background: transparent !important;
-  font-family: Georgia, serif !important;
-  position: relative !important;
-  z-index: 1 !important;
+ 
 }
 
 .quill-editor-container .ql-editor {

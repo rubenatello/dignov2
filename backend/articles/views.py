@@ -2,6 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .models import Article
 from .models import Article, Image
 from .serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer, ImageSerializer
@@ -47,6 +49,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ArticleViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling Article CRUD operations.

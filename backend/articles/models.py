@@ -117,6 +117,7 @@ class Article(models.Model):
     # Publishing
     is_published = models.BooleanField(default=False)
     published_date = models.DateTimeField(blank=True, null=True)
+    scheduled_publish_time = models.DateTimeField(blank=True, null=True, help_text="If set, article will be published at this time.")
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     

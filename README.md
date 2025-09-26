@@ -8,12 +8,13 @@ Technology Stack
 Backend
 Django: The core of our backend. Chosen for its "batteries-included" philosophy, making it quick to develop and easy to scale. Its robust admin panel is a perfect foundation for our internal dashboard.
 SQLite (Development): A simple, file-based database for local development, allowing for quick setup without external dependencies.
-Quill.js or similar rich-text editor: For the article writer and editor. This is a crucial component that will provide a robust WYSIWYG (What You See Is What You Get) experience with features like:
-Draft saving
-Undo/redo functionality
-Version history
-Image and link embedding
-Collaboration tools (if required in a later phase)
+Custom Rich Text Editor: A fully custom-built editor using native browser APIs for the Studio article writer. This provides a robust WYSIWYG (What You See Is What You Get) experience with features like:
+Draft saving and autosave
+Undo/redo functionality with keyboard shortcuts
+Rich text formatting (headings, bold, italic, underline, lists)
+Link insertion and text alignment
+Perfect React 19 and Next.js 15 compatibility
+Zero external dependencies for maximum stability
 Stripe (or similar): For managing user subscriptions securely.
 Google Analytics API (or similar): For fetching and displaying website performance data within the admin dashboard.
 Folder Structure (Proposed)
@@ -107,6 +108,17 @@ Development Checklist
 - Next.js frontend with responsive design
 - Railway + Vercel deployment configurations
 - Django admin interface for content management
+- **Custom Studio UI** with rich text editor for article creation
+
+### Studio UI Features
+The `/studio` page provides a comprehensive article writing experience:
+- **Custom Rich Text Editor**: Built with native browser APIs for maximum compatibility
+- **Complete article metadata**: Title, excerpt, category, tags, author/co-author selection
+- **Image management**: Featured image selection and content images
+- **Publishing controls**: Draft/publish workflow, breaking news toggle, scheduled publishing
+- **Word count tracking**: Real-time word count display
+- **Autosave functionality**: Automatic draft saving every 30 seconds
+- **Responsive design**: Works seamlessly on desktop, tablet, and mobile
 
 ## Quick Start
 
