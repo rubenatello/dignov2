@@ -54,7 +54,7 @@ const ArticleCard = ({ article }: { article: Article }) => (
         </span>
       )}
     </div>
-    <h3 className="text-xl font-bold text-black mb-2 group-hover:text-gray-700 transition-colors leading-tight">
+    <h3 className="article-title text-xl font-bold text-black mb-2 group-hover:text-gray-700 transition-colors leading-tight">
       {article.title}
     </h3>
     <p className="text-gray-600 text-sm mb-3 line-clamp-3">{article.summary}</p>
@@ -87,7 +87,7 @@ const FeaturedArticle = ({ article }: { article?: Article }) => (
           <span className="text-gray-600 text-lg">Featured Image</span>
         </div>
       </div>
-      <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 group-hover:text-gray-700 transition-colors leading-tight">
+      <h1 className="article-title text-3xl md:text-4xl font-bold text-black mb-4 group-hover:text-gray-700 transition-colors leading-tight">
         Welcome to Digno: Independent Journalism for a New Era
       </h1>
       <p className="text-gray-600 text-lg leading-relaxed mb-4">
@@ -116,7 +116,7 @@ const ArticleList = ({ articles }: { articles: Article[] }) => (
             </span>
           )}
         </div>
-        <h2 className="text-xl font-bold text-black mb-2 group-hover:text-gray-700 transition-colors">
+        <h2 className="article-title text-xl font-bold text-black mb-2 group-hover:text-gray-700 transition-colors">
           {article.title}
         </h2>
         <p className="text-gray-600 text-sm mb-2">{article.summary}</p>

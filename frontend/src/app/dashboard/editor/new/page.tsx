@@ -177,7 +177,7 @@ export default function ArticleWriter() {
             </div>
           )}
 
-          <h1 className="text-3xl font-extrabold mb-6 text-slate-800">Write a New Article</h1>
+          <h1 className="text-2xl font-extrabold mb-6 text-slate-800">Write a New Article</h1>
 
           {/* Panel */}
           <div className="rounded-3xl p-10 md:p-14 bg-gradient-to-br from-white via-gray-50 to-gray-100 shadow-xl border border-gray-100/80">
