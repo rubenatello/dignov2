@@ -1,5 +1,9 @@
 import { useRef, useEffect, useState } from "react";
-import ImagePickerModal, { ImageAsset } from "./ImagePickerModal";
+import { useFormatState } from "./functions/useFormatState";
+import { wrapLinesInBlocks } from "./functions/wrapLinesInBlocks";
+import { BoldIcon, ItalicIcon, UnderlineIcon, ListBulletIcon, NumberedListIcon, LinkIcon, PhotoIcon, ChatBubbleLeftEllipsisIcon, Bars3BottomLeftIcon, Bars3BottomRightIcon, Bars3CenterLeftIcon } from "@heroicons/react/24/outline";
+import ImagePickerModal from "./ImagePickerModal";
+import type { ImageAsset } from "./ImagePicker";
 
 interface RichTextEditorProps {
   value: string;
@@ -8,15 +12,33 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [wordCount, setWordCount] = useState(0);
-  const [readTime, setReadTime] = useState(0);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [wordCount, setWordCount] = useState(0);
+    const [readTime, setReadTime] = useState(0);
+
+  // Use custom hook for format state
+  const formatState = useFormatState();
 
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+    if (editorRef.current) {
+      // If value is plain text or only <br>s, wrap in <div>s
+      let html = value;
+      if (!/<(div|p|ul|ol|li|h1|h2|h3|blockquote|img|a)[\s>]/i.test(html)) {
+        html = wrapLinesInBlocks(html);
+      }
+      if (editorRef.current.innerHTML !== html) {
+        editorRef.current.innerHTML = html;
+      }
     }
   }, [value]);
+  // On paste, wrap plain text lines in <div> blocks
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData("text/plain");
+    const html = wrapLinesInBlocks(text);
+    document.execCommand("insertHTML", false, html);
+    handleInput();
+  };
 
   const handleInput = () => {
     if (editorRef.current) {
@@ -29,8 +51,11 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   };
 
   const exec = (command: string, arg?: string) => {
-    document.execCommand(command, false, arg);
-    handleInput();
+    if (editorRef.current) {
+      editorRef.current.focus();
+      document.execCommand(command, false, arg);
+      handleInput();
+    }
   };
 
   const handleInsertImage = (img: ImageAsset) => {
@@ -39,84 +64,122 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
 
   return (
     <div>
-      <div className="flex flex-wrap gap-4 mb-2 bg-gray-50 p-2 rounded border shadow-sm">
+  <div className="flex flex-wrap gap-2 md:gap-3 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-sm">
         {/* Bold */}
-        <button type="button" title="Bold" onClick={() => exec("bold")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M6 4h5a3 3 0 010 6H6zm0 6h6a3 3 0 010 6H6z" stroke="#222" strokeWidth="1.5"/></svg>
+        <button
+          type="button"
+          title="Bold"
+          onClick={() => exec("bold")}
+          className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.bold ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
+          <BoldIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* Italic */}
-        <button type="button" title="Italic" onClick={() => exec("italic")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M8 4h6M6 16h6M10 4l-4 12" stroke="#222" strokeWidth="1.5"/></svg>
+        <button
+          type="button"
+          title="Italic"
+          onClick={() => exec("italic")}
+          className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.italic ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
+          <ItalicIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* Underline */}
-        <button type="button" title="Underline" onClick={() => exec("underline")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M7 4v5a3 3 0 006 0V4M5 16h10" stroke="#222" strokeWidth="1.5"/></svg>
+        <button
+          type="button"
+          title="Underline"
+          onClick={() => exec("underline")}
+          className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.underline ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
+          <UnderlineIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* H1 */}
-        <button type="button" title="Heading 1" onClick={() => exec("formatBlock", "<h1>")}
-          className="hover:bg-gray-200 w-10 h-10 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
+        <button
+          type="button"
+          title="Heading 1"
+          onClick={() => exec("formatBlock", "<h1>")}
+          className={`w-11 h-11 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.h1 ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="17" fontWeight="bold" fill="#222">H1</text></svg>
         </button>
         {/* H2 */}
-        <button type="button" title="Heading 2" onClick={() => exec("formatBlock", "<h2>")}
-          className="hover:bg-gray-200 w-10 h-10 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
+        <button
+          type="button"
+          title="Heading 2"
+          onClick={() => exec("formatBlock", "<h2>")}
+          className={`w-11 h-11 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.h2 ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="17" fontWeight="bold" fill="#222">H2</text></svg>
         </button>
         {/* H3 */}
-        <button type="button" title="Heading 3" onClick={() => exec("formatBlock", "<h3>")}
-          className="hover:bg-gray-200 w-10 h-10 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
+        <button
+          type="button"
+          title="Heading 3"
+          onClick={() => exec("formatBlock", "<h3>")}
+          className={`w-11 h-11 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.h3 ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="17" fontWeight="bold" fill="#222">H3</text></svg>
         </button>
-        {/* Bullet List */}
-        <button type="button" title="Bullet List" onClick={() => exec("insertUnorderedList")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="6" cy="7" r="1.5" fill="#222"/><circle cx="6" cy="13" r="1.5" fill="#222"/><rect x="10" y="6" width="6" height="2" fill="#222"/><rect x="10" y="12" width="6" height="2" fill="#222"/></svg>
-        </button>
-        {/* Numbered List */}
-        <button type="button" title="Numbered List" onClick={() => exec("insertOrderedList")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><text x="3" y="10" fontSize="10" fill="#222">1.</text><rect x="10" y="6" width="6" height="2" fill="#222"/><text x="3" y="17" fontSize="10" fill="#222">2.</text><rect x="10" y="12" width="6" height="2" fill="#222"/></svg>
-        </button>
         {/* Left Align */}
-        <button type="button" title="Align Left" onClick={() => exec("justifyLeft")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect x="4" y="6" width="12" height="2" fill="#222"/><rect x="4" y="10" width="8" height="2" fill="#222"/><rect x="4" y="14" width="10" height="2" fill="#222"/></svg>
+        <button
+          type="button"
+          title="Align Left"
+          onClick={() => exec("justifyLeft")}
+          className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.left ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
+          <Bars3BottomLeftIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* Center Align */}
-        <button type="button" title="Align Center" onClick={() => exec("justifyCenter")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect x="6" y="6" width="8" height="2" fill="#222"/><rect x="4" y="10" width="12" height="2" fill="#222"/><rect x="7" y="14" width="6" height="2" fill="#222"/></svg>
+        <button
+          type="button"
+          title="Align Center"
+          onClick={() => exec("justifyCenter")}
+          className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.center ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
+          <Bars3CenterLeftIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* Right Align */}
-        <button type="button" title="Align Right" onClick={() => exec("justifyRight")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect x="4" y="6" width="12" height="2" fill="#222"/><rect x="8" y="10" width="8" height="2" fill="#222"/><rect x="6" y="14" width="10" height="2" fill="#222"/></svg>
-        </button>
-        {/* Blockquote */}
-        <button type="button" title="Blockquote" onClick={() => exec("formatBlock", "<blockquote>")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M6 8h4v2H6zm0 4h4v2H6z" fill="#222"/><path d="M14 8h2v2h-2zm0 4h2v2h-2z" fill="#222"/></svg>
+        <button
+          type="button"
+          title="Align Right"
+          onClick={() => exec("justifyRight")}
+          className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.right ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
+        >
+          <Bars3BottomRightIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* Link */}
         <button type="button" title="Link" onClick={() => exec("createLink", prompt("Enter URL:") || "")}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><path d="M7 10a3 3 0 013-3h2a3 3 0 110 6h-2a3 3 0 01-3-3z" stroke="#222" strokeWidth="1.5" fill="none"/><path d="M13 10a3 3 0 00-3-3H8a3 3 0 100 6h2a3 3 0 003-3z" stroke="#222" strokeWidth="1.5" fill="none"/></svg>
+          className="hover:bg-primary/10 focus:bg-primary/20 w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border border-transparent focus:border-primary/40">
+          <LinkIcon className="w-5 h-5 text-gray-800" />
         </button>
         {/* Image */}
         <button type="button" title="Insert Image" onClick={() => setShowImageModal(true)}
-          className="hover:bg-gray-200 w-9 h-9 flex items-center justify-center rounded-full transition focus:ring-2 focus:ring-primary">
-          <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="#e5e7eb" stroke="#222" strokeWidth="1.5"/><circle cx="8" cy="8" r="2" fill="#222"/><path d="M3 17l5-5 4 4 5-7" stroke="#222" strokeWidth="1.5" fill="none"/></svg>
+          className="hover:bg-primary/10 focus:bg-primary/20 w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border border-transparent focus:border-primary/40">
+          <PhotoIcon className="w-5 h-5 text-gray-800" />
         </button>
       </div>
       <div
         ref={editorRef}
-        className="w-full border px-3 py-2 rounded-md min-h-[200px] bg-white"
+        className="w-full border border-gray-200 px-4 py-3 rounded-xl min-h-[220px] bg-white focus-within:shadow-lg focus-within:border-primary/40 transition-all"
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
+        onPaste={handlePaste}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            // Only intercept if not inside a list
+            const sel = window.getSelection();
+            if (sel && sel.anchorNode) {
+              let node = sel.anchorNode;
+              while (node && node.nodeType === 3) node = node.parentNode;
+              const tag = node && node.nodeName.toLowerCase();
+              if (tag !== "li") {
+                e.preventDefault();
+                document.execCommand("insertHTML", false, "<div><br></div>");
+                return false;
+              }
+            }
+          }
+        }}
         style={{ outline: "none" }}
       />
       <div className="flex gap-4 text-xs text-gray-500 mt-1">

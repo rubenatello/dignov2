@@ -27,22 +27,23 @@ export default function StudioHeader({ user = { name: "Admin" }, onBack }: { use
   };
 
   return (
-    <header className="flex items-center justify-between px-10 py-5 bg-white border-b border-gray-200 shadow-sm mb-10">
-      <div className="flex items-center gap-6">
+    <header className="w-full fixed top-0 left-0 z-40 bg-gradient-to-b from-white/95 via-white/90 to-white/80 border-b border-gray-200 shadow-lg flex items-center justify-between px-6 md:px-12 py-4 md:py-6 gap-4">
+      <div className="flex items-center gap-6 min-w-0">
         <button
-          className="mr-4 px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-medium shadow-sm transition-all"
+          className="mr-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-medium shadow-sm transition-all"
           onClick={handleBack}
         >
           &larr; Back
         </button>
-        <Image src="/digno-logo.svg" alt="Digno Logo" width={96} height={48} />
-        <span className="font-roboto text-2xl font-regular text-secondary">Studio</span>
+        <Image src="/digno-logo.svg" alt="Digno Logo" width={110} height={54} className="min-w-[64px]" />
+        <span className="font-roboto text-3xl font-bold text-primary tracking-tight ml-2 select-none"></span>
+        <span className="font-roboto text-2xl font-medium text-gray-700 ml-2 select-none">Studio</span>
       </div>
       <div className="flex items-center gap-4">
-        <span className="inline-block w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-700 border border-gray-300">
-          {user.name[0]}
+        <span className="inline-flex w-11 h-11 bg-gray-200 rounded-full items-center justify-center text-xl font-bold text-gray-700 border border-gray-300 shadow-sm">
+          <span className="flex items-center justify-center w-full h-full">{user.name[0]}</span>
         </span>
-        <span className="hidden md:inline text-base font-medium text-gray-700">{user.name}</span>
+        <span className="hidden md:inline text-base font-medium text-gray-700 truncate max-w-[120px]">{user.name}</span>
       </div>
 
       {showModal && (

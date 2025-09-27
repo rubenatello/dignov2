@@ -19,15 +19,21 @@ const tabs: { id: TabId; label: string }[] = [
 
 export default function SidebarTabs({ activeTab, setActiveTab }: SidebarTabsProps) {
   return (
-    <nav className="flex flex-col gap-2 w-56 pr-4">
+    <nav className="flex flex-col gap-2 w-56 pr-4 p-4 rounded-2xl shadow-lg bg-white/90 border border-gray-100">
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          className={`text-left px-4 py-2 rounded-lg font-medium border transition-all duration-150 "
-            ${activeTab === tab.id ? "bg-primary text-white border-primary shadow" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"}`}
+          className={`relative text-left px-4 py-2 rounded-xl font-medium border transition-all duration-150 overflow-hidden
+            ${activeTab === tab.id
+              ? "bg-primary/10 text-primary border-primary shadow font-bold"
+              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}
+          style={activeTab === tab.id ? { boxShadow: '0 2px 12px 0 rgba(80,120,255,0.08)' } : {}}
           onClick={() => setActiveTab(tab.id)}
         >
-          {tab.label}
+          {activeTab === tab.id && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-primary rounded-full" aria-hidden="true"></span>
+          )}
+          <span className="pl-2">{tab.label}</span>
         </button>
       ))}
     </nav>
