@@ -165,19 +165,12 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         onInput={handleInput}
         onPaste={handlePaste}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            // Only intercept if not inside a list
-            const sel = window.getSelection();
-            if (sel && sel.anchorNode) {
-              let node = sel.anchorNode;
-              while (node && node.nodeType === 3) node = node.parentNode;
-              const tag = node && node.nodeName.toLowerCase();
-              if (tag !== "li") {
-                e.preventDefault();
-                document.execCommand("insertHTML", false, "<div><br></div>");
-                return false;
-              }
-            }
+          // Allow browser default for Enter (new paragraph)
+          // Only override Shift+Enter for line break
+          if (e.key === "Enter" && e.shiftKey) {
+            e.preventDefault();
+            document.execCommand("insertLineBreak");
+            return false;
           }
         }}
         style={{ outline: "none" }}
