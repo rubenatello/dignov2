@@ -1,42 +1,24 @@
 "use client";
-
+import StatisticsTab from "./StatisticsTab";
+import SeoTab from "./SeoTab";
+import PublishingTab from "./PublishingTab";
+import ClassificationTab from "./ClassificationTab";
+import AuthorsTab from "./AuthorsTab";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 // @ts-ignore
 import axios from "axios";
 import { useInterval } from "react-use";
 import StudioHeader from "../StudioHeader";
-import RichTextEditor from "../RichTextEditor";
-import ImagePicker from "../ImagePicker";
+import ContentTab from "./ContentTab";
+import FeaturedImageTab from "./FeaturedImageTab";
 import SaveActions from "../SaveActions";
-import SidebarTabs from "../SidebarTabs";
+import Sidebar from "./Sidebar";
 import { CATEGORY_CHOICES, authorOptions, coAuthorOptions } from "../functions/options";
 import { handleFormChange } from "../functions/formHandlers";
 import { useArticleSave } from "../functions/useArticleSave";
-
-type NullableFile = File | null;
-
-type FormDataState = {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string;
-  content: string;
-  featured_image: NullableFile;
-  featured_image_asset: string; // id as string
-  category: string;
-  is_breaking_news: boolean;
-  author: string; // id as string
-  co_author: string; // id as string (optional -> empty)
-  is_published: boolean;
-  published_date: string; // datetime-local string
-  scheduled_publish_time: string; // datetime-local string
-  tags: string;
-  meta_description: string;
-  view_count: number;
-  created_date: string;
-  updated_date: string;
-};
+import type { FormDataState } from "./types";
+import { getNext6amET } from "./utils";
 
 export default function ArticleWriter() {
   const router = useRouter();
@@ -46,6 +28,7 @@ export default function ArticleWriter() {
   const [formData, setFormData] = useState<FormDataState>({
     id: "",
     title: "",
+    subtitle: "", // NEW FIELD
     slug: "",
     summary: "",
     content: "",
@@ -125,9 +108,7 @@ export default function ArticleWriter() {
     <>
       <StudioHeader user={{ name: "Admin" }} onBack={() => setShowBackModal(true)} />
       <div className="min-h-screen bg-gray-50 p-8 flex flex-row gap-8 pt-[88px] md:pt-[104px]">
-        <div className="w-64 flex-shrink-0">
-          <SidebarTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-        </div>
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <div className="flex-1 max-w-3xl mx-auto">
           {/* Last updated info */}
           <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
@@ -182,266 +163,49 @@ export default function ArticleWriter() {
           {/* Panel */}
           <div className="rounded-3xl p-10 md:p-14 bg-gradient-to-br from-white via-gray-50 to-gray-100 shadow-xl border border-gray-100/80">
             {activeTab === "content" && (
-              <div className="space-y-12">
-                <div className="space-y-7">
-                  <div>
-                    <label className="block text-xl font-bold mb-2 text-gray-800 tracking-tight">Title *</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      className="w-full border border-gray-300 px-5 py-3 rounded-xl bg-white/90 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition text-xl placeholder-gray-400 shadow-sm"
-                      placeholder="Enter a compelling headline..."
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Slug</label>
-                    <input
-                      type="text"
-                      name="slug"
-                      value={formData.slug}
-                      onChange={handleChange}
-                      className="w-full border border-gray-200 px-4 py-2 rounded-lg bg-white/80 focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition placeholder-gray-400"
-                      placeholder="auto-generated or custom-url"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-base font-semibold mb-1 text-gray-700">Summary *</label>
-                    <textarea
-                      name="summary"
-                      value={formData.summary}
-                      onChange={handleChange}
-                      className="w-full border border-gray-200 px-4 py-3 rounded-lg bg-white/80 focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition placeholder-gray-400"
-                      rows={3}
-                      required
-                      placeholder="Brief summary of the article..."
-                    />
-                    <span className="text-xs text-gray-400">This appears in article previews and search results.</span>
-                  </div>
-                </div>
-                <div className="border-t border-dashed border-gray-200/70 my-8" />
-                <div>
-                  <label className="block text-lg font-bold mb-2 text-gray-800">Content *</label>
-                  <div className="rounded-2xl bg-white/90 border border-gray-100/80 shadow-sm p-2 md:p-4">
-                    <RichTextEditor
-                      value={formData.content}
-                      onChange={(val: string) => setFormData((prev) => ({ ...prev, content: val }))}
-                    />
-                  </div>
-                </div>
-              </div>
+              <ContentTab formData={formData} setFormData={setFormData} handleChange={handleChange} />
             )}
 
             {activeTab === "featured_image" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Featured Image (from library)</label>
-                  <ImagePicker
-                    value={formData.featured_image_asset ? Number(formData.featured_image_asset) : null}
-                    onChange={(id: number | null) =>
-                      setFormData((prev) => ({ ...prev, featured_image_asset: id ? String(id) : "" }))
-                    }
-                    showUpload={true}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Featured Image (upload)</label>
-                  <input type="file" name="featured_image" onChange={handleChange} className="w-full" />
-                </div>
-              </div>
+              <FeaturedImageTab formData={formData} setFormData={setFormData} handleChange={handleChange} />
             )}
 
             {activeTab === "classification" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  >
-                    {CATEGORY_CHOICES.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="is_breaking_news"
-                      checked={formData.is_breaking_news}
-                      onChange={handleChange}
-                    />
-                    Breaking News
-                  </label>
-                </div>
-              </div>
+              <ClassificationTab formData={formData} handleChange={handleChange} />
             )}
 
             {activeTab === "authors" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Author</label>
-                  <select
-                    name="author"
-                    value={formData.author}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  >
-                    {authorOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Co-Author</label>
-                  <select
-                    name="co_author"
-                    value={formData.co_author}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  >
-                    {coAuthorOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <AuthorsTab formData={formData} handleChange={handleChange} />
             )}
 
             {activeTab === "publishing" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="is_published"
-                      checked={formData.is_published}
-                      onChange={handleChange}
-                    />
-                    Published
-                    <button
-                      type="button"
-                      className="ml-2 px-3 py-1 rounded bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition"
-                      onClick={() => {
-                        const now = new Date();
-                        const pad = (n: number) => n.toString().padStart(2, "0");
-                        const local = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-                        setFormData((prev) => ({ ...prev, is_published: true, published_date: local }));
-                      }}
-                    >
-                      Now
-                    </button>
-                  </label>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Published Date</label>
-                  <input
-                    type="datetime-local"
-                    name="published_date"
-                    value={formData.published_date}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Scheduled Publish Time</label>
-                  <input
-                    type="datetime-local"
-                    name="scheduled_publish_time"
-                    value={formData.scheduled_publish_time}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  />
-                </div>
-              </div>
+              <PublishingTab
+                formData={formData}
+                setFormData={setFormData}
+                handleChange={handleChange}
+                handleSaveAndContinue={handleSaveAndContinue}
+                getNext6amET={getNext6amET}
+              />
             )}
 
             {activeTab === "seo" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tags</label>
-                  <input
-                    type="text"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Meta Description</label>
-                  <input
-                    type="text"
-                    name="meta_description"
-                    value={formData.meta_description}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-                  />
-                </div>
-              </div>
+              <SeoTab formData={formData} handleChange={handleChange} />
             )}
 
             {activeTab === "statistics" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">View Count</label>
-                  <input
-                    type="number"
-                    value={formData.view_count}
-                    readOnly
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Created Date</label>
-                  <input
-                    type="text"
-                    value={formData.created_date}
-                    readOnly
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Updated Date</label>
-                  <input
-                    type="text"
-                    value={formData.updated_date}
-                    readOnly
-                    className="w-full border border-gray-200 px-4 py-3 rounded-lg bg-gray-100"
-                  />
-                </div>
-              </div>
+              <StatisticsTab formData={formData} />
             )}
           </div>
         </div>
 
-        <SaveActions
-          loading={loading}
-          onSave={handleSave}
-          onSaveAndAddAnother={handleSaveAndAddAnother}
-          onSaveAndContinue={handleSaveAndContinue}
-        />
+        <div className="flex gap-4 mt-8">
+          <SaveActions
+            loading={loading}
+            onSave={handleSave}
+            onSaveAndAddAnother={handleSaveAndAddAnother}
+            onSaveAndContinue={handleSaveAndContinue}
+          />
+        </div>
       </div>
     </>
   );
