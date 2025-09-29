@@ -1,7 +1,24 @@
 from rest_framework import generics, serializers
 from rest_framework.response import Response
 from django.db.models import Q
-from .models import Article
+from .models import Article, Tag
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+class TagSuggestionAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        query = request.query_params.get('q', '').strip()
+        if query:
+            tags = Tag.objects.filter(name__icontains=query).order_by('name')[:10]
+        else:
+            tags = Tag.objects.all().order_by('name')[:10]
+        return Response({
+            'results': [
+                {'id': tag.id, 'name': tag.name, 'slug': tag.slug}
+                for tag in tags
+            ]
+        })
 
 class ArticleSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()

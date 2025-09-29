@@ -6,6 +6,26 @@ from ckeditor_uploader.fields import RichTextUploadingField
 from PIL import Image as PILImage
 import os
 
+class Tag(models.Model):
+    """
+    Tag model for article categorization and SEO.
+    """
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=60, unique=True, blank=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+        indexes = [models.Index(fields=['name']), models.Index(fields=['slug'])]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
 class Image(models.Model):
     """
     Reusable Image model for article media with automatic captioning and source attribution.
@@ -122,7 +142,7 @@ class Article(models.Model):
     updated_date = models.DateTimeField(auto_now=True)
     
     # SEO and categorization
-    tags = models.CharField(max_length=200, blank=True, help_text="Comma-separated tags")
+    tags = models.ManyToManyField(Tag, blank=True, related_name='articles', help_text="Tags for this article")
     meta_description = models.CharField(max_length=160, blank=True)
     
     # Engagement metrics
@@ -160,8 +180,9 @@ class Article(models.Model):
     
     @property
     def tags_list(self):
-        return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+        return list(self.tags.values_list('name', flat=True))
     
     def increment_view_count(self):
         self.view_count += 1
         self.save(update_fields=['view_count'])
+

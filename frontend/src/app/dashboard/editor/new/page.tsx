@@ -165,7 +165,7 @@ export default function ArticleWriter() {
             </div>
           )}
 
-          <h1 className="text-2xl font-extrabold mb-8 text-slate-800">Write a New Article</h1>
+          <h2 className="text-lg font-bold mb-8 text-slate-800">Write a New Article</h2>
 
           {/* Main content area, no card/box */}
           <section className="flex flex-col gap-10">
@@ -196,7 +196,7 @@ export default function ArticleWriter() {
             )}
 
             {activeTab === "seo" && (
-              <SeoTab formData={formData} handleChange={handleChange} />
+              <SeoTab formData={formData} handleChange={handleChange} setFormData={setFormData} />
             )}
 
             {activeTab === "statistics" && (
