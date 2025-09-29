@@ -107,9 +107,16 @@ export default function ArticleWriter() {
   return (
     <>
       <StudioHeader user={{ name: "Admin" }} onBack={() => setShowBackModal(true)} />
-      <div className="min-h-screen bg-gray-50 p-8 flex flex-row gap-8 pt-[88px] md:pt-[104px]">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <div className="flex-1 max-w-3xl mx-auto">
+  <div className="min-h-screen p-8 flex flex-row gap-12 pt-[88px] md:pt-[104px]" style={{ background: '#eef8feff' }}>
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          loading={loading}
+          onSave={handleSave}
+          onSaveAndAddAnother={handleSaveAndAddAnother}
+          onSaveAndContinue={handleSaveAndContinue}
+        />
+        <main className="flex-1 max-w-3xl mx-auto">
           {/* Last updated info */}
           <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
             <span>Last updated:</span>
@@ -158,10 +165,10 @@ export default function ArticleWriter() {
             </div>
           )}
 
-          <h1 className="text-2xl font-extrabold mb-6 text-slate-800">Write a New Article</h1>
+          <h1 className="text-2xl font-extrabold mb-8 text-slate-800">Write a New Article</h1>
 
-          {/* Panel */}
-          <div className="rounded-3xl p-10 md:p-14 bg-gradient-to-br from-white via-gray-50 to-gray-100 shadow-xl border border-gray-100/80">
+          {/* Main content area, no card/box */}
+          <section className="flex flex-col gap-10">
             {activeTab === "content" && (
               <ContentTab formData={formData} setFormData={setFormData} handleChange={handleChange} />
             )}
@@ -195,17 +202,10 @@ export default function ArticleWriter() {
             {activeTab === "statistics" && (
               <StatisticsTab formData={formData} />
             )}
-          </div>
-        </div>
+          </section>
+        </main>
 
-        <div className="flex gap-4 mt-8">
-          <SaveActions
-            loading={loading}
-            onSave={handleSave}
-            onSaveAndAddAnother={handleSaveAndAddAnother}
-            onSaveAndContinue={handleSaveAndContinue}
-          />
-        </div>
+        {/* SaveActions now in Sidebar */}
       </div>
     </>
   );

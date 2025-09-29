@@ -5,7 +5,7 @@
 
 - [ ] **Modern Card Layout:** Use a true card layout for the editor panel with more shadow, more padding, and a slightly raised effect. Consider a subtle gradient or soft background blur for the card.
 - [ ] **Section Dividers:** Add soft section dividers (e.g., `border-b border-gray-100/80` or subtle background color blocks) between major form sections for clarity.
-- [ ] **Sidebar Polish:** Add a soft shadow, rounded corners, and a subtle background to the sidebar. Highlight the active tab with a pill or accent bar.
+- [ ] **Sidebar Design Finalization:** Design and finalize the sidebar component for the article editor, ensuring a robust, modern, and visually sleek navigation with accent highlights and microinteractions.
 - [ ] **StudioHeader Polish:** Make the header sticky, add a soft drop shadow, and use a more visually distinct avatar (e.g., colored circle with initials, or user photo if available).
 - [ ] **Typography:** Use larger, bolder section headings, and lighter, more readable body text. Add more vertical spacing between fields and sections.
 - [ ] **Button Design:** Use more visually distinct buttons (filled, outlined, ghost) with clear hover/focus states. Consider a floating save bar for actions.
@@ -17,6 +17,7 @@
 - [ ] **Dark Mode:** Add a dark mode toggle and ensure all components look great in both themes.
 - [ ] **Error/Success Feedback:** Use toasts or inline alerts for save, error, and validation feedback.
 - [ ] **Loading States:** Add skeleton loaders or spinners for async actions (save, image load, etc).
+- [ ] **New Article Page Styling:** Finish styling the new article page to achieve a robust and sleek UI with fewer boxes, more whitespace, and a modern card layout.
 
 ---
 
@@ -26,11 +27,9 @@
 - [ ] Version History: Implement backend versioning and wire up frontend to fetch/select versions
 - [ ] Permissions / Auth: Replace role stub with real user/role fetching and ensure requests send session/cookie/token
 - [ ] Error/Loading States: Add error/loading states for all major actions in frontend
-- [ ] Test all API endpoints from frontend container
-- [ ] Validate all major workflows (save, publish, preview, schedule, image upload)
 - [ ] Word Count & Read Time: Add frontend word count and estimated read time (200-250 wpm) to article writer
-- [ ] Studio Writer Styling: Improve UI/UX and visual design of the article writer/editor
 - [ ] StudioHeader Back Button: Add a back button to StudioHeader that prompts 'Are you sure?' with options to save or discard draft before leaving
+- [ ] Finish linking frontend to backend and tie all editor actions to APIs for full test coverage. Test writing, saving, publishing, scheduling, and image upload workflows end-to-end.
 
 ---
 

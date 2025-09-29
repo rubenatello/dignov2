@@ -10,7 +10,7 @@ export default function SaveActions({ loading, onSave, onSaveAndAddAnother, onSa
     <div className="flex flex-col gap-3 w-full max-w-xs ml-auto sticky top-8">
       <button
         type="button"
-        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition disabled:opacity-50"
+        className="bg-primary text-white text-sm px-4 py-2 rounded-md hover:bg-secondary transition disabled:opacity-50"
         onClick={onSave}
         disabled={loading}
       >
@@ -18,7 +18,7 @@ export default function SaveActions({ loading, onSave, onSaveAndAddAnother, onSa
       </button>
       <button
         type="button"
-        className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition disabled:opacity-50"
+        className="bg-gray-800 text-white text-sm px-4 py-2 rounded-md hover:bg-gray-700 transition disabled:opacity-50"
         onClick={onSaveAndAddAnother}
         disabled={loading}
       >
@@ -26,7 +26,7 @@ export default function SaveActions({ loading, onSave, onSaveAndAddAnother, onSa
       </button>
       <button
         type="button"
-        className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition disabled:opacity-50"
+        className="bg-gray-700 text-white text-sm px-4 py-2 rounded-md hover:bg-gray-600 transition disabled:opacity-50"
         onClick={onSaveAndContinue}
         disabled={loading}
       >
