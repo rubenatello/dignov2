@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useFormatState } from "./functions/useFormatState";
 import { wrapLinesInBlocks } from "./functions/wrapLinesInBlocks";
-import { BoldIcon, ItalicIcon, UnderlineIcon, ListBulletIcon, NumberedListIcon, LinkIcon, PhotoIcon, ChatBubbleLeftEllipsisIcon, Bars3BottomLeftIcon, Bars3BottomRightIcon, Bars3CenterLeftIcon } from "@heroicons/react/24/outline";
+import { BoldIcon, ItalicIcon, UnderlineIcon, ListBulletIcon, NumberedListIcon, LinkIcon, PhotoIcon, ChatBubbleLeftEllipsisIcon, Bars3BottomLeftIcon, Bars3BottomRightIcon, Bars3CenterLeftIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import ImagePickerModal from "./ImagePickerModal";
 import type { ImageAsset } from "./ImagePicker";
 
@@ -64,7 +64,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
 
   return (
     <div>
-  <div className="flex flex-wrap gap-2 md:gap-3 mb-3 bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-sm">
+  <div className="flex flex-wrap gap-2 md:gap-3 mb-3 bg-gray-10 p-3 rounded-xl border border-gray-100 shadow-sm">
         {/* Bold */}
         <button
           type="button"
@@ -72,7 +72,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("bold")}
           className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.bold ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <BoldIcon className="w-5 h-5 text-gray-800" />
+          <BoldIcon className="w-4 h-4 text-gray-800" />
         </button>
         {/* Italic */}
         <button
@@ -81,7 +81,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("italic")}
           className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.italic ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <ItalicIcon className="w-5 h-5 text-gray-800" />
+          <ItalicIcon className="w-4 h-4 text-gray-800" />
         </button>
         {/* Underline */}
         <button
@@ -90,7 +90,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("underline")}
           className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.underline ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <UnderlineIcon className="w-5 h-5 text-gray-800" />
+          <UnderlineIcon className="w-4 h-4 text-gray-800" />
         </button>
         {/* H1 */}
         <button
@@ -99,7 +99,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("formatBlock", "<h1>")}
           className={`w-11 h-11 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.h1 ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="17" fontWeight="bold" fill="#222">H1</text></svg>
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="15" fontWeight="bold" fill="#222">H1</text></svg>
         </button>
         {/* H2 */}
         <button
@@ -108,7 +108,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("formatBlock", "<h2>")}
           className={`w-11 h-11 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.h2 ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="17" fontWeight="bold" fill="#222">H2</text></svg>
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="15" fontWeight="bold" fill="#222">H2</text></svg>
         </button>
         {/* H3 */}
         <button
@@ -117,7 +117,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("formatBlock", "<h3>")}
           className={`w-11 h-11 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.h3 ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="17" fontWeight="bold" fill="#222">H3</text></svg>
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><text x="3" y="19" fontSize="15" fontWeight="bold" fill="#222">H3</text></svg>
         </button>
         {/* Left Align */}
         <button
@@ -126,7 +126,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("justifyLeft")}
           className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.left ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <Bars3BottomLeftIcon className="w-5 h-5 text-gray-800" />
+          <Bars3BottomLeftIcon className="w-4 h-4 text-gray-800" />
         </button>
         {/* Center Align */}
         <button
@@ -135,7 +135,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("justifyCenter")}
           className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.center ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <Bars3CenterLeftIcon className="w-5 h-5 text-gray-800" />
+          <Bars3Icon className="w-4 h-4 text-gray-800" />
         </button>
         {/* Right Align */}
         <button
@@ -144,17 +144,17 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
           onClick={() => exec("justifyRight")}
           className={`w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border ${formatState.right ? "bg-primary/20 border-primary/40" : "hover:bg-primary/10 focus:bg-primary/20 border-transparent"}`}
         >
-          <Bars3BottomRightIcon className="w-5 h-5 text-gray-800" />
+          <Bars3BottomRightIcon className="w-4 h-4 text-gray-800" />
         </button>
         {/* Link */}
         <button type="button" title="Link" onClick={() => exec("createLink", prompt("Enter URL:") || "")}
           className="hover:bg-primary/10 focus:bg-primary/20 w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border border-transparent focus:border-primary/40">
-          <LinkIcon className="w-5 h-5 text-gray-800" />
+          <LinkIcon className="w-4 h-4 text-gray-800" />
         </button>
         {/* Image */}
         <button type="button" title="Insert Image" onClick={() => setShowImageModal(true)}
           className="hover:bg-primary/10 focus:bg-primary/20 w-10 h-10 flex items-center justify-center rounded-lg transition focus:ring-2 focus:ring-primary/30 border border-transparent focus:border-primary/40">
-          <PhotoIcon className="w-5 h-5 text-gray-800" />
+          <PhotoIcon className="w-4 h-4 text-gray-800" />
         </button>
       </div>
       <div

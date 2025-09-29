@@ -45,7 +45,16 @@ class ImageViewSet(viewsets.ModelViewSet):
     def recent(self, request):
         """Get most recently uploaded images"""
         recent_images = self.get_queryset()[:20]
-        serializer = self.get_serializer(recent_images, many=True)
+        serializer = self.get_serializer(recent_images, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
 

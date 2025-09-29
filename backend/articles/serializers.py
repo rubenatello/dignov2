@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Article, Image
+from .models import Article, Image, Tag
 
 User = get_user_model()
 
@@ -89,6 +89,12 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         ]
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
+    tags = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text="List of tag names"
+    )
+
     class Meta:
         model = Article
         fields = [
@@ -103,7 +109,26 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
             # Collaboration
             'co_author'
         ]
-    
+
     def create(self, validated_data):
+        tags_data = validated_data.pop('tags', [])
         validated_data['author'] = self.context['request'].user
-        return super().create(validated_data)
+        article = super().create(validated_data)
+        if tags_data:
+            tag_objs = []
+            for tag_name in tags_data:
+                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                tag_objs.append(tag)
+            article.tags.set(tag_objs)
+        return article
+
+    def update(self, instance, validated_data):
+        tags_data = validated_data.pop('tags', None)
+        article = super().update(instance, validated_data)
+        if tags_data is not None:
+            tag_objs = []
+            for tag_name in tags_data:
+                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                tag_objs.append(tag)
+            article.tags.set(tag_objs)
+        return article

@@ -73,13 +73,6 @@ export default function ImagePicker({ value, onChange, showUpload }: ImagePicker
           </div>
         </>
       )}
-      {showUpload && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Upload New Image</label>
-          <input type="file" name="upload_image" />
-          {/* TODO: Implement upload logic */}
-        </div>
-      )}
     </div>
   );
 }

@@ -59,7 +59,7 @@ export default function EditorListPage() {
 
       <main className="p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Articles</h1>
+          <h2 className="text-2xl font-bold text-gray-800">Articles</h2>
           <Link
             href="/dashboard/editor/new"
             className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition no-underline"

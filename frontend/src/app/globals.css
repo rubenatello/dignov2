@@ -42,7 +42,7 @@ body {
 /* Base typography */
 h1, h2, h3 {
   font-family: var(--font-sans);
-  color: var(--secondary);
+
 }
 
 h1 {
@@ -69,5 +69,5 @@ a {
 }
 
 a:hover {
-  text-decoration: underline;
+  text-decoration: #f8fbff;
 }

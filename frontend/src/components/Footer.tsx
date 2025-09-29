@@ -31,7 +31,7 @@ export default function Footer() {
           </div>
           
           <div>
-            <h3 className="font-bold mb-4 text-gray-300">Sections</h3>
+            <h3 className="font-bold mb-4 text-white">Sections</h3>
             <ul className="space-y-2 text-sm">
               {menuItems.slice(0, 4).map((item) => (
                 <li key={item}>

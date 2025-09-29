@@ -6,7 +6,13 @@ export function useArticleSave(formData, setFormData, setLoading, router) {
   const handleSave = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/api/articles/", formData);
+      const payload = {
+        ...formData,
+        tags: typeof formData.tags === 'string'
+          ? formData.tags.split(',').map((t) => t.trim()).filter(Boolean)
+          : Array.isArray(formData.tags) ? formData.tags : [],
+      };
+      const response = await axios.post("/api/articles/", payload);
       const articleId = response.data?.id;
       if (articleId) {
         router.push(`/dashboard/editor/${articleId}`);
@@ -22,7 +28,13 @@ export function useArticleSave(formData, setFormData, setLoading, router) {
   const handleSaveAndAddAnother = useCallback(async () => {
     setLoading(true);
     try {
-      await axios.post("/api/articles/", formData);
+      const payload = {
+        ...formData,
+        tags: typeof formData.tags === 'string'
+          ? formData.tags.split(',').map((t) => t.trim()).filter(Boolean)
+          : Array.isArray(formData.tags) ? formData.tags : [],
+      };
+      await axios.post("/api/articles/", payload);
       setFormData({
         id: "",
         title: "",
@@ -56,10 +68,16 @@ export function useArticleSave(formData, setFormData, setLoading, router) {
     setLoading(true);
     try {
       let response;
+      const payload = {
+        ...formData,
+        tags: typeof formData.tags === 'string'
+          ? formData.tags.split(',').map((t) => t.trim()).filter(Boolean)
+          : Array.isArray(formData.tags) ? formData.tags : [],
+      };
       if (formData.id) {
-        response = await axios.put(`/api/articles/${formData.id}/`, formData);
+        response = await axios.put(`/api/articles/${formData.id}/`, payload);
       } else {
-        response = await axios.post("/api/articles/", formData);
+        response = await axios.post("/api/articles/", payload);
         const newId = response?.data?.id ?? "";
         if (newId) setFormData((prev) => ({ ...prev, id: newId }));
       }
