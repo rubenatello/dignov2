@@ -16,11 +16,13 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = ["*"]
 
 
-# Add Codespaces domains for CSRF protection
+
 # Add Codespaces domains for CSRF protection
 CSRF_TRUSTED_ORIGINS = [
     'https://*.app.github.dev',
     'https://*.githubpreview.dev',
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 # Disable HTTPS redirect in dev to avoid proxy issues

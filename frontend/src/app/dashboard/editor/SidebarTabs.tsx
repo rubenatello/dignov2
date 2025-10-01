@@ -11,6 +11,7 @@ const tabs: { id: TabId; label: string }[] = [
   { id: "content", label: "Content" },
   { id: "featured_image", label: "Featured Image" },
   { id: "classification", label: "Classification" },
+  
   { id: "authors", label: "Authors" },
   { id: "publishing", label: "Publishing" },
   { id: "seo", label: "SEO & Categorization" },

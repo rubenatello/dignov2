@@ -66,7 +66,7 @@ export default function ArticleWriter() {
     router.push("/dashboard/editor");
   };
 
-
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Change handler (modularized)
   const handleChange = handleFormChange<FormDataState>(setFormData);
@@ -90,12 +90,23 @@ export default function ArticleWriter() {
 
 
   // Modular save actions
-  const { handleSave, handleSaveAndAddAnother, handleSaveAndContinue } = useArticleSave(
+  const { handleSave, handleSaveAndAddAnother, handleSaveAndContinue, handleSaveAndGetSlug } = useArticleSave(
     formData,
     setFormData,
     setLoading,
     router
   );
+
+  // Preview handler: save, then open preview tab
+  const handlePreview = async () => {
+    setErrorMsg(null);
+    const { slug, error } = await handleSaveAndGetSlug();
+    if (slug) {
+      window.open(`/articles/${slug}`, '_blank');
+    } else {
+      setErrorMsg(error || 'Unable to preview: could not save or generate slug.');
+    }
+  };
 
   // Basic router guard (optional)
   useEffect(() => {
@@ -115,8 +126,21 @@ export default function ArticleWriter() {
           onSave={handleSave}
           onSaveAndAddAnother={handleSaveAndAddAnother}
           onSaveAndContinue={handleSaveAndContinue}
+          slug={formData.slug}
+          onPreview={handlePreview}
+          previewDisabled={
+            !formData.title?.trim() ||
+            !formData.summary?.trim() ||
+            !formData.content?.replace(/<[^>]+>/g, '').trim() ||
+            !formData.author?.trim()
+          }
         />
         <main className="flex-1 max-w-3xl mx-auto">
+          {errorMsg && (
+            <div className="mb-4 p-3 rounded bg-red-100 border border-red-300 text-red-800 text-sm">
+              <b>Backend Error:</b> {errorMsg}
+            </div>
+          )}
           {/* Last updated info */}
           <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
             <span>Last updated:</span>

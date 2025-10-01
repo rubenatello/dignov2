@@ -51,7 +51,7 @@ export default function EditorListPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-4 bg-white border-b shadow-sm">
         <div className="flex items-center gap-3">
-          <img src="/digno-logo.svg" alt="Digno Logo" className="h-12 w-auto" />
+          <img src="/logo.png" alt="Digno Logo" className="h-12 w-auto" />
           <span className="font-roboto text-2xl font-regular text-secondary">Studio</span>
         </div>
         <ProfileDropdown />

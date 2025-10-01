@@ -1,3 +1,5 @@
+
+
 import React from "react";
 import {
   DocumentTextIcon,
@@ -17,6 +19,9 @@ interface SidebarProps {
   onSave: () => void;
   onSaveAndAddAnother: () => void;
   onSaveAndContinue: () => void;
+  slug?: string;
+  onPreview: () => void;
+  previewDisabled: boolean;
 }
 import SaveActions from "../SaveActions";
 
@@ -31,7 +36,7 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ];
 
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onSave, onSaveAndAddAnother, onSaveAndContinue }) => (
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onSave, onSaveAndAddAnother, onSaveAndContinue, slug, onPreview, previewDisabled }) => (
   <aside
     className="min-h-[calc(100vh-48px)] w-56 bg-white/80 backdrop-blur-md border-r border-gray-200 shadow-lg flex flex-col py-8 px-2 gap-2 sticky top-0 z-20"
     style={{ boxShadow: '0 4px 32px 0 rgba(30, 64, 175, 0.06)' }}
@@ -59,13 +64,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onS
         </button>
       ))}
     </nav>
-      <div className="mt-8">
+      <div className="mt-8 flex flex-col gap-3">
         <SaveActions
           loading={loading}
           onSave={onSave}
           onSaveAndAddAnother={onSaveAndAddAnother}
           onSaveAndContinue={onSaveAndContinue}
         />
+        <button
+          type="button"
+          className="bg-white border border-primary text-primary font-semibold px-2 py-1 rounded-md hover:bg-primary hover:text-white transition disabled:opacity-50 mt-2"
+          style={{ boxShadow: '0 2px 8px 0 rgba(81, 111, 255, 0.07)' }}
+          onClick={onPreview}
+          disabled={loading || previewDisabled}
+          title={previewDisabled ? 'Fill all required fields to preview' : 'Preview Article'}
+        >
+          Preview Article
+        </button>
       </div>
   </aside>
 );

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { login } from '../lib/authApi';
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
@@ -12,19 +13,11 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    try {
-      const response = await fetch('/api/auth/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
-      }
-      // Redirect or set auth state
+  const result = await login(username, password);
+    if (result.success) {
       router.push('/');
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+    } else {
+      setError(result.error || 'Sign in failed');
     }
   };
 
@@ -34,8 +27,8 @@ export default function SignInPage() {
         <h2 className="text-2xl font-bold mb-6 text-center">Sign In</h2>
         {error && <div className="text-red-500 mb-4">{error}</div>}
         <div className="mb-4">
-          <label className="block mb-1 font-medium">Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-3 py-2 border rounded" />
+          <label className="block mb-1 font-medium">Username</label>
+          <input type="text" value={username} onChange={e => setUsername(e.target.value)} required className="w-full px-3 py-2 border rounded" />
         </div>
         <div className="mb-6">
           <label className="block mb-1 font-medium">Password</label>

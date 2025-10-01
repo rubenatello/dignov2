@@ -27,7 +27,7 @@ export default function StudioHeader({ user = { name: "Admin" }, onBack }: { use
   };
 
   return (
-    <header className="w-full fixed top-0 left-0 z-40 bg-gradient-to-b from-white/95 via-white/90 to-white/80 border-b border-gray-200 shadow-lg flex items-center justify-between px-6 md:px-12 py-4 md:py-6 gap-4">
+    <header className="w-full fixed top-0 left-0 z-40 bg-gradient-to-b from-white/95 via-white/90 to-white/80 border-b border-gray-200 shadow-lg flex items-center justify-between px-6 md:px-12 py-2 md:py-2 gap-4">
       <div className="flex items-center gap-6 min-w-0">
         <button
           className="mr-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-medium shadow-sm transition-all"
@@ -35,7 +35,7 @@ export default function StudioHeader({ user = { name: "Admin" }, onBack }: { use
         >
           &larr; Back
         </button>
-        <Image src="/digno-logo.svg" alt="Digno Logo" width={110} height={54} className="min-w-[64px]" />
+        <Image src="/logo.png" alt="Digno Logo" width={30} height={30} className="min-w-[54px]" />
         <span className="font-roboto text-3xl font-bold text-primary tracking-tight ml-2 select-none"></span>
         <span className="font-roboto text-2xl font-medium text-gray-700 ml-2 select-none">Studio</span>
       </div>

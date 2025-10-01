@@ -1,3 +1,6 @@
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
+
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -65,3 +68,10 @@ class RegisterView(APIView):
     def post(self, request):
         # For now, only allow admin to create users
         return Response({'error': 'Registration not available'}, status=status.HTTP_403_FORBIDDEN)
+class CsrfTokenView(APIView):
+    """CSRF token endpoint for frontend"""
+    permission_classes = [permissions.AllowAny]
+
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        return Response({'message': 'CSRF cookie set'})
