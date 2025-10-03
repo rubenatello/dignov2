@@ -1,10 +1,4 @@
-/* Article title (homepage, cards, etc.) - use sans-serif for modern look */
-.article-title {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  color: var(--secondary);
-  line-height: 1.2;
-}
+
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap');
 
@@ -12,8 +6,8 @@
   --background: #fffbed;
   --foreground: #2d2d2d;
   --white: #ffffff;
-  --primary: #516fff;
-  --secondary: #2d2d2d;
+  --primary: #202020;
+  --secondary: #242424;
   --accent: #fffbed;
   --accent-light: #f8fbff;
   --cta: #ff6a07;
@@ -70,4 +64,19 @@ a {
 
 a:hover {
   text-decoration: #f8fbff;
+}
+
+a.footer-link, footer a {
+  color: #fcf5ed;
+}
+footer a:hover {
+  color: #fff;
+  font-weight: bold;
+}
+/* Article title (homepage, cards, etc.) - use sans-serif for modern look */
+.article-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--secondary);
+  line-height: 1.2;
 }

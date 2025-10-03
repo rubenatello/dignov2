@@ -26,9 +26,9 @@ export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
             <Image 
               src="/logo.png" 
               alt="Digno" 
-              width={60} 
-              height={60}
-              className="h-12 w-auto"
+              width={200} 
+              height={200}
+              className="h-16 w-auto"
             />
           </Link>
         </div>
