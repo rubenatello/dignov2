@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '../lib/authApi';
+import { login } from '../../lib/authApi';
 
 export default function SignInPage() {
   const [username, setUsername] = useState('');
@@ -13,9 +13,9 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-  const result = await login(username, password);
+    const result = await login(username, password);
     if (result.success) {
-      router.push('/');
+      router.push('/dashboard/editor');
     } else {
       setError(result.error || 'Sign in failed');
     }
