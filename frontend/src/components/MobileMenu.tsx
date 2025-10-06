@@ -21,18 +21,16 @@ export default function MobileMenu({ isOpen, onItemClick }: MobileMenuProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="md:hidden bg-white border-t border-gray-200">
-      {/* Mobile Header: Logo and Search */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
-        <Link href="/" className="flex items-center">
-          <img src="/logo.png" alt="Digno" className="h-8 w-auto" />
-        </Link>
-        <SearchBar onClose={onItemClick} />
-      </div>
-      {/* Subscribe & Login */}
-      <div className="flex flex-col items-center py-4 border-b border-gray-100">
-        <button className="bg-blue-500 text-white px-6 py-2 rounded text-sm font-semibold mb-2 w-3/4">SUBSCRIBE</button>
-        <button className="text-gray-700 hover:text-black font-medium w-3/4">LOG IN</button>
+    <div className="md:hidden bg-white border-t border-gray-200 rounded-lg shadow-lg max-w-full mx-auto mt-2">
+      {/* Mobile Header: Search, Subscribe, Login on one row evenly spaced */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 gap-2">
+        <div className="flex-1 flex justify-center">
+          <div className="w-full flex justify-center">
+            <SearchBar onClose={onItemClick} />
+          </div>
+        </div>
+        <button className="bg-cta text-white px-4 py-2 rounded text-sm font-semibold flex-1 mx-2">SUBSCRIBE</button>
+        <button className="text-gray-700 hover:text-black font-medium px-4 py-2 rounded text-sm flex-1 mx-2">LOG IN</button>
       </div>
       {/* Menu Items */}
       <div className="px-4 py-2 space-y-1">

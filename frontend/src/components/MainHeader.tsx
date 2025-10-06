@@ -28,7 +28,7 @@ export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
               alt="Digno" 
               width={200} 
               height={200}
-              className="h-16 w-auto"
+              className="h-20 w-auto"
             />
           </Link>
         </div>

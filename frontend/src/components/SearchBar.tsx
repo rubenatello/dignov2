@@ -31,38 +31,38 @@ export default function SearchBar({ onClose }: SearchBarProps) {
       {/* Search Icon Button */}
       <button 
         onClick={toggleSearch}
-        className="text-sm text-gray-700 hover:text-black font-medium" 
+        className="text-sm text-gray-700 hover:text-black font-medium p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Search"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
           <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" fill="none" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" />
         </svg>
       </button>
 
-      {/* Search Dropdown */}
+      {/* Search Dropdown - mobile responsive */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          <form onSubmit={handleSearch} className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 relative">
+        <div className="fixed left-0 right-0 top-[60px] mx-auto w-full flex justify-center z-50">
+          <div className="w-[95vw] max-w-sm bg-white border border-gray-200 rounded-lg shadow-lg">
+            <form onSubmit={handleSearch} className="p-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search articles..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-sm"
                   autoFocus
                 />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-3 py-2 bg-primary text-white rounded-md hover:brightness-75 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+                >
+                  Search
+                </button>
               </div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Search
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
 

@@ -33,9 +33,9 @@ export default function StudioHeader({ user = { name: "Admin" }, onBack }: { use
           className="mr-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-medium shadow-sm transition-all"
           onClick={handleBack}
         >
-          &larr; Back
-        </button>
-        <Image src="/logo.png" alt="Digno Logo" width={30} height={30} className="min-w-[54px]" />
+    &larr; Back
+    </button>
+    <Image src="/logo.png" alt="Digno Logo" width={60} height={60} className="w-12 h-12 object-contain" priority />
         <span className="font-roboto text-3xl font-bold text-primary tracking-tight ml-2 select-none"></span>
         <span className="font-roboto text-2xl font-medium text-gray-700 ml-2 select-none">Studio</span>
       </div>
