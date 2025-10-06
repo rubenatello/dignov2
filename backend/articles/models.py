@@ -123,6 +123,7 @@ class Article(models.Model):
     slug = models.SlugField(max_length=200, unique=True, blank=True)
     content = RichTextUploadingField()
     summary = models.TextField(max_length=300, help_text="Brief summary of the article")
+    subtitle = models.CharField(max_length=300, blank=True, help_text="Optional subtitle for the article")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='articles')
     co_author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='co_authored_articles', blank=True, null=True, help_text="Optional co-author for collaborative articles")
     

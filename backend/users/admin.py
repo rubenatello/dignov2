@@ -18,18 +18,25 @@ class UserAdmin(BaseUserAdmin):
 
     readonly_fields = ('created_date', 'total_donated')
 
+    def _is_editor_or_superuser(self, user):
+        # Check both role and group membership
+        return (
+            user.is_superuser or
+            getattr(user, 'role', None) == 'editor' or
+            user.groups.filter(name='editor').exists()
+        )
+
     def has_module_permission(self, request):
-        # Only editors (superusers) can see the user admin
-        return request.user.is_superuser or getattr(request.user, 'role', None) == 'editor'
+        return self._is_editor_or_superuser(request.user)
 
     def has_view_permission(self, request, obj=None):
-        return request.user.is_superuser or getattr(request.user, 'role', None) == 'editor'
+        return self._is_editor_or_superuser(request.user)
 
     def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser or getattr(request.user, 'role', None) == 'editor'
+        return self._is_editor_or_superuser(request.user)
 
     def has_add_permission(self, request):
-        return request.user.is_superuser or getattr(request.user, 'role', None) == 'editor'
+        return self._is_editor_or_superuser(request.user)
 
     def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser or getattr(request.user, 'role', None) == 'editor'
+        return self._is_editor_or_superuser(request.user)

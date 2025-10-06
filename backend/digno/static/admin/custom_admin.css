@@ -1,0 +1,10 @@
+/* Make select fields and option text dark for visibility on white backgrounds */
+select, option {
+  color: #222 !important;
+  background: #fff !important;
+}
+
+/* Also make input text dark */
+input, textarea {
+  color: #222 !important;
+}

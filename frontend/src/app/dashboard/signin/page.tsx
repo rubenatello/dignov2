@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { login } from '../../lib/authApi';
 
@@ -23,19 +24,26 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign In</h2>
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-        <div className="mb-4">
-          <label className="block mb-1 font-medium">Username</label>
-          <input type="text" value={username} onChange={e => setUsername(e.target.value)} required className="w-full px-3 py-2 border rounded" />
+      <div className="w-full max-w-md">
+        <div className="flex flex-col items-center mb-8">
+          <Image src="/logo.png" alt="Digno Logo" width={80} height={80} className="mb-2" priority />
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Studio Editor</h1>
+          <p className="text-gray-500 text-sm text-center mb-2">Sign in to access the Digno Studio Editor. This is not for news subscribers.</p>
         </div>
-        <div className="mb-6">
-          <label className="block mb-1 font-medium">Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-3 py-2 border rounded" />
-        </div>
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700">Sign In</button>
-      </form>
+  <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+          <h2 className="text-xl font-bold mb-6 text-center">Sign In</h2>
+          {error && <div className="text-red-500 mb-4">{error}</div>}
+          <div className="mb-4">
+            <label className="block mb-1 font-medium">Username</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} required className="w-full px-3 py-2 border rounded" />
+          </div>
+          <div className="mb-6">
+            <label className="block mb-1 font-medium">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-3 py-2 border rounded" />
+          </div>
+          <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700">Sign In</button>
+        </form>
+      </div>
     </div>
   );
 }

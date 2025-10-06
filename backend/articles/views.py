@@ -58,29 +58,53 @@ class ImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ArticleViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling Article CRUD operations.
     """
-    queryset = Article.objects.filter(is_published=True).select_related('author')
+    queryset = Article.objects.all().select_related('author')
     permission_classes = [IsWriterOrEditorOrReadOnly]
     lookup_field = 'slug'
     
+
     def get_serializer_class(self):
         if self.action == 'list':
             return ArticleListSerializer
         elif self.action in ['create', 'update', 'partial_update']:
             return ArticleCreateUpdateSerializer
         return ArticleDetailSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            self.perform_create(serializer)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial, context={'request': request})
+        if not serializer.is_valid():
+            return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            self.perform_update(serializer)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.data)
     
     def get_queryset(self):
         queryset = self.queryset
-        
+        # Only filter for published articles on list/retrieve actions
+        if self.action in ["list", "retrieve", "featured"]:
+            queryset = queryset.filter(is_published=True)
         # If user is staff, show all articles including unpublished
         if self.request.user.is_authenticated and self.request.user.is_staff:
             queryset = Article.objects.all().select_related('author')
-        
         # Handle search query
         search_query = self.request.query_params.get('search', None)
         if search_query:
@@ -92,12 +116,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
                 Q(author__first_name__icontains=search_query) |
                 Q(author__last_name__icontains=search_query)
             )
-        
         # Filter by tags if provided
         tags = self.request.query_params.get('tags', None)
         if tags:
             queryset = queryset.filter(tags__icontains=tags)
-        
         return queryset
     
     def retrieve(self, request, *args, **kwargs):

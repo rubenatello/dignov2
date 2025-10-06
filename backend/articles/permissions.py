@@ -1,4 +1,8 @@
+
+import logging
 from rest_framework import permissions
+
+logger = logging.getLogger("digno.articles.permissions")
 
 class IsWriterOrEditorOrReadOnly(permissions.BasePermission):
     """
@@ -6,6 +10,7 @@ class IsWriterOrEditorOrReadOnly(permissions.BasePermission):
     Subscribers and anonymous users can only read.
     """
     def has_permission(self, request, view):
+        logger.debug(f"[DEBUG] User: {getattr(request.user, 'username', None)}, Authenticated: {request.user.is_authenticated}, Superuser: {getattr(request.user, 'is_superuser', None)}, Role: {getattr(request.user, 'role', None)}")
         if request.method in permissions.SAFE_METHODS:
             return True
         user = request.user

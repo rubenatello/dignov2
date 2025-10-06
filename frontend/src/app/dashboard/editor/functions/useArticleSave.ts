@@ -18,7 +18,21 @@ export function useArticleSave(formData, setFormData, setLoading, router) {
         router.push(`/dashboard/editor/${articleId}`);
       }
     } catch (error) {
-      console.error("Error creating article:", error);
+      let backendError = "Unknown error";
+      if (error.response && error.response.data) {
+        if (typeof error.response.data === 'string') {
+          backendError = error.response.data;
+        } else if (typeof error.response.data === 'object') {
+          backendError = Object.entries(error.response.data)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+            .join(' | ');
+        }
+      } else if (error.message) {
+        backendError = error.message;
+      }
+      console.error("Error creating article:", backendError);
+      // Optionally, you can set an error state here to show in the UI
+      if (setFormData) setFormData((prev) => ({ ...prev, error: backendError }));
     } finally {
       setLoading(false);
     }

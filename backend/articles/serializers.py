@@ -99,7 +99,7 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             # Core content
-            'title', 'content', 'summary',
+            'title', 'content', 'summary', 'subtitle',
             # Featured image (either direct upload OR library asset reference)
             'featured_image', 'featured_image_asset',
             # Publication & categorization
@@ -111,8 +111,12 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        from django.utils import timezone
         tags_data = validated_data.pop('tags', [])
         validated_data['author'] = self.context['request'].user
+        # Set published_date if publishing now
+        if validated_data.get('is_published') and not validated_data.get('published_date'):
+            validated_data['published_date'] = timezone.now()
         article = super().create(validated_data)
         if tags_data:
             tag_objs = []
@@ -123,7 +127,11 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         return article
 
     def update(self, instance, validated_data):
+        from django.utils import timezone
         tags_data = validated_data.pop('tags', None)
+        # Set published_date if publishing now
+        if validated_data.get('is_published') and not instance.published_date:
+            validated_data['published_date'] = timezone.now()
         article = super().update(instance, validated_data)
         if tags_data is not None:
             tag_objs = []

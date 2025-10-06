@@ -2,6 +2,17 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Sync Django group membership with role
+        from django.contrib.auth.models import Group
+        role_group, _ = Group.objects.get_or_create(name=self.role)
+        # Remove user from all role groups except current
+        for group in self.groups.all():
+            if group.name in ["subscriber", "writer", "editor"] and group.name != self.role:
+                self.groups.remove(group)
+        if role_group not in self.groups.all():
+            self.groups.add(role_group)
     """
     Custom user model extending Django's AbstractUser.
     Adds fields for donation tracking and profile information.
