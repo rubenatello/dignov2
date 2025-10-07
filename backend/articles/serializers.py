@@ -62,13 +62,17 @@ class ArticleListSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             'id', 'title', 'slug', 'summary', 'author', 'featured_image_data',
-            'published_date', 'scheduled_publish_time', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news'
+            'published_date', 'last_published_update', 'scheduled_publish_time', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news', 'is_published'
         ]
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags_list = serializers.ReadOnlyField()
     featured_image_data = serializers.SerializerMethodField()
+    # include raw fields needed by the editor form
+    featured_image = serializers.ImageField(read_only=True)
+    featured_image_asset = serializers.PrimaryKeyRelatedField(read_only=True)
+    co_author = serializers.PrimaryKeyRelatedField(read_only=True)
     
     def get_featured_image_data(self, obj):
         featured_image = obj.get_featured_image()
@@ -84,22 +88,32 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Article
         fields = [
-            'id', 'title', 'slug', 'content', 'summary', 'author', 'featured_image_data',
-            'published_date', 'scheduled_publish_time', 'created_date', 'updated_date', 'view_count', 'tags_list', 'meta_description'
+            'id', 'title', 'subtitle', 'slug', 'content', 'summary',
+            'author', 'co_author',
+            'category', 'is_breaking_news', 'is_published',
+            'featured_image', 'featured_image_asset', 'featured_image_data',
+            'published_date', 'last_published_update', 'scheduled_publish_time', 'created_date', 'updated_date',
+            'view_count', 'tags_list', 'meta_description'
         ]
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
+    # Accept tags as simple string list on write; don't include in auto representation to avoid
+    # DRF trying to serialize the ManyRelatedManager (which triggers the TypeError seen).
     tags = serializers.ListField(
         child=serializers.CharField(),
         required=False,
+        write_only=True,
         help_text="List of tag names"
     )
+    # Expose the generated primary key so the frontend can navigate after creating
+    id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Article
         fields = [
+            'id',
             # Core content
-            'title', 'content', 'summary', 'subtitle',
+            'title', 'slug', 'content', 'summary', 'subtitle',
             # Featured image (either direct upload OR library asset reference)
             'featured_image', 'featured_image_asset',
             # Publication & categorization
@@ -109,6 +123,15 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
             # Collaboration
             'co_author'
         ]
+
+    def to_representation(self, instance):
+        """Convert Article instance to dictionary representation"""
+        # Let DRF build the base representation first (will not include write_only 'tags')
+        data = super().to_representation(instance)
+        # Convert tags ManyToManyField to list of tag names
+        if instance.pk:  # Only if instance exists (has been saved)
+            data['tags'] = [tag.name for tag in instance.tags.all()]
+        return data
 
     def create(self, validated_data):
         from django.utils import timezone
@@ -129,10 +152,15 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         from django.utils import timezone
         tags_data = validated_data.pop('tags', None)
-        # Set published_date if publishing now
-        if validated_data.get('is_published') and not instance.published_date:
+        # Determine if this update is the initial publish transition
+        is_initial_publish = bool(validated_data.get('is_published')) and instance.published_date is None
+        if is_initial_publish:
             validated_data['published_date'] = timezone.now()
         article = super().update(instance, validated_data)
+        # If the article is (now) published and this was not the initial publish, record last_published_update
+        if article.is_published and article.published_date and not is_initial_publish:
+            article.last_published_update = timezone.now()
+            article.save(update_fields=['last_published_update'])
         if tags_data is not None:
             tag_objs = []
             for tag_name in tags_data:

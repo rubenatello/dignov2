@@ -141,6 +141,8 @@ class Article(models.Model):
     scheduled_publish_time = models.DateTimeField(blank=True, null=True, help_text="If set, article will be published at this time.")
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    # Tracks the most recent edit after the article has been published (does not include the initial publish time)
+    last_published_update = models.DateTimeField(blank=True, null=True)
     
     # SEO and categorization
     tags = models.ManyToManyField(Tag, blank=True, related_name='articles', help_text="Tags for this article")
@@ -157,6 +159,7 @@ class Article(models.Model):
         ]
     
     def save(self, *args, **kwargs):
+        # If no slug provided, default to slugified title; otherwise honor provided slug
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)

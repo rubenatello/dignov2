@@ -1,54 +1,231 @@
-import { useCallback } from "react";
-import axios from "axios";
+import { useCallback, useMemo, useState } from "react";
+import api from "@/lib/api";
+import { formatDateTimeForBackend } from "@/lib/dateUtils";
+import { toast } from "@/components/ui/Toast";
 
-export function useArticleSave(formData, setFormData, setLoading, router) {
-  // Save new article
-  const handleSave = useCallback(async () => {
-    setLoading(true);
+type SlugResolveAction = "overwrite" | "back" | "next";
+
+type SlugConflictState = {
+  isOpen: boolean;
+  currentSlug: string;
+  title: string;
+  baseSlug: string;
+  onResolve: (action: SlugResolveAction) => Promise<void>;
+};
+
+type FormDataShape = Record<string, any>;
+
+/** Helper: simple slugify (avoid new deps) */
+function simpleSlugify(input: string): string {
+  return String(input || "")
+    .toLowerCase()
+    .normalize("NFKD") // split accented characters
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[^a-z0-9]+/g, "-") // non-alnum -> dash
+    .replace(/^-+|-+$/g, "") // trim dashes
+    .replace(/-{2,}/g, "-"); // collapse
+}
+
+/** Helper: take only last path segment if a path-like slug was provided */
+function sanitizeSlug(rawSlugOrTitle: string): string {
+  const raw = String(rawSlugOrTitle || "");
+  const last = raw.split("/").filter(Boolean).pop() || raw;
+  return simpleSlugify(last);
+}
+
+/** Helper: normalize tags into string[] */
+function normalizeTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.filter(Boolean).map(String);
+  if (typeof tags === "string") {
+    return tags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+/** Helper: build payload consistently */
+function buildPayload(formData: FormDataShape) {
+  const desired = formData.slug ? String(formData.slug) : String(formData.title || "");
+  const cleanSlug = sanitizeSlug(desired);
+  return {
+    ...formData,
+    slug: cleanSlug,
+    tags: normalizeTags(formData.tags),
+    scheduled_publish_time: formatDateTimeForBackend(
+      formData.scheduled_publish_time
+    ),
+    published_date: formatDateTimeForBackend(formData.published_date),
+  };
+}
+
+/** Helper: get next available slug: baseSlug-1, -2, ... */
+async function getNextAvailableSlug(baseSlug: string): Promise<string> {
+  let suffix = 1;
+  let candidate = `${baseSlug}-${suffix}`;
+  // Guardrail to avoid accidental infinite loops
+  const MAX_TRIES = 500;
+  // eslint-disable-next-line no-constant-condition
+  for (let i = 0; i < MAX_TRIES; i++) {
     try {
-      const payload = {
-        ...formData,
-        tags: typeof formData.tags === 'string'
-          ? formData.tags.split(',').map((t) => t.trim()).filter(Boolean)
-          : Array.isArray(formData.tags) ? formData.tags : [],
-      };
-  const response = await axios.post("/api/articles/", payload, { withCredentials: true });
-      const articleId = response.data?.id;
-      if (articleId) {
-        router.push(`/dashboard/editor/${articleId}`);
-      }
-    } catch (error) {
-      let backendError = "Unknown error";
-      if (error.response && error.response.data) {
-        if (typeof error.response.data === 'string') {
-          backendError = error.response.data;
-        } else if (typeof error.response.data === 'object') {
-          backendError = Object.entries(error.response.data)
-            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-            .join(' | ');
-        }
-      } else if (error.message) {
-        backendError = error.message;
-      }
-      console.error("Error creating article:", backendError);
-      // Optionally, you can set an error state here to show in the UI
-      if (setFormData) setFormData((prev) => ({ ...prev, error: backendError }));
-    } finally {
-      setLoading(false);
+  const res = await api.get(`/articles/exists/?slug=${candidate}`);
+      const exists = Boolean(res?.data?.exists);
+      if (!exists) return candidate;
+      suffix += 1;
+      candidate = `${baseSlug}-${suffix}`;
+    } catch {
+      // 404/Not Found -> available
+      return candidate;
     }
-  }, [formData, router, setLoading]);
+  }
+  // Fallback if something is really odd
+  return `${baseSlug}-${Date.now()}`;
+}
 
-  // Save and add another
+export function useArticleSave(
+  formData: FormDataShape,
+  setFormData: (updater: any) => void,
+  setLoading: (val: boolean) => void,
+  router: { push: (path: string) => void },
+  originalSlug?: string | null,
+  setOriginalSlug?: (slug: string | null) => void
+) {
+  const [slugConflict, setSlugConflict] = useState<SlugConflictState>({
+    isOpen: false,
+    currentSlug: "",
+    title: "",
+    baseSlug: "",
+    onResolve: async () => {},
+  });
+
+  /** Precomputed payload (stable per deps) */
+  const payload = useMemo(() => buildPayload(formData), [formData]);
+
+  /**
+   * Save flow:
+   * - If editing (originalSlug or id present): perform PUT (update) by originalSlug or current slug.
+   * - Else (creating): preflight slug and POST; on conflict, open dialog.
+   */
+  const handleSave = useCallback(
+    async (isRetry = false) => {
+      setLoading(true);
+      try {
+        const isEditing = Boolean(originalSlug || formData.id);
+        if (isEditing) {
+          // Update existing article
+          const targetSlug = String(originalSlug || payload.slug || "");
+          await api.put(`/articles/${targetSlug}/`, payload);
+          toast("Your article has been saved!", "success");
+          // If slug changed, update originalSlug so future updates target the new slug
+          if (setOriginalSlug) setOriginalSlug(String(payload.slug || ""));
+          router.push(`/dashboard/editor`);
+          return;
+        }
+
+        // Creating a new article: preflight slug existence
+        const slugToCheck = String(payload.slug || "");
+        // Create the article; if it fails due to slug uniqueness, auto-overwrite
+        let response;
+        try {
+          response = await api.post("/articles/", payload);
+        } catch (err: any) {
+          const msg = String(err?.response?.data || err?.message || "");
+          if (msg.toLowerCase().includes("already exists") && slugToCheck) {
+            await api.put(`/articles/${slugToCheck}/`, payload);
+            toast("Your article has been saved!", "success");
+            router.push(`/dashboard/editor`);
+            return;
+          }
+          throw err;
+        }
+        const articleId = response?.data?.id;
+        if (articleId) {
+          toast("Your article has been saved!", "success");
+          router.push(`/dashboard/editor`);
+        }
+      } catch (err: any) {
+        // Robust backend error parsing
+        let backendError = "Unknown error";
+        const data = err?.response?.data;
+        if (data) {
+          if (typeof data === "string") {
+            backendError = data;
+          } else if (typeof data === "object") {
+            const src =
+              data.error && typeof data.error === "object" ? data.error : data;
+            backendError = Object.entries(src)
+              .map(([k, v]) =>
+                `${k}: ${Array.isArray(v) ? v.map((x) => String(x)).join(", ") : String(v)}`
+              )
+              .join(" | ");
+          }
+        } else if (err?.message) {
+          backendError = err.message;
+        }
+        // Fallback dialog based on the assembled human-readable error string
+        if (
+          !isRetry &&
+          backendError &&
+          backendError.toLowerCase().includes("already exists")
+        ) {
+          const clean = String(payload.slug || "");
+          const base = clean.replace(/-\d+$/, "");
+          let existingId: number | null = null;
+          try {
+            const ex = await api.get(`/articles/exists/?slug=${clean}`);
+            if (ex?.data?.exists) existingId = ex?.data?.id ?? null;
+          } catch {}
+          console.debug('[SlugConflict] Fallback on 400 unique: opening dialog', {
+            slug: clean,
+            existingId,
+          });
+          setSlugConflict({
+            isOpen: true,
+            currentSlug: clean,
+            title: formData.title ?? "",
+            baseSlug: base,
+            onResolve: async (action: SlugResolveAction) => {
+              if (action === "overwrite") {
+                setLoading(true);
+                try {
+                  // Overwrite by slug regardless of whether we have id
+                  await api.put(`/articles/${clean}/`, payload);
+                  toast("Your article has been saved!", "success");
+                  setSlugConflict((prev) => ({ ...prev, isOpen: false }));
+                  router.push(`/dashboard/editor`);
+                } catch {
+                  alert("Failed to overwrite existing article.");
+                } finally {
+                  setLoading(false);
+                }
+              } else if (action === "next") {
+                const nextSlug = await getNextAvailableSlug(base);
+                setFormData((prev: any) => ({ ...prev, slug: nextSlug }));
+                await handleSave(true);
+              } else {
+                setSlugConflict((prev) => ({ ...prev, isOpen: false }));
+              }
+            },
+          });
+          return;
+        }
+        console.error("Error creating article:", backendError);
+        setFormData((prev: any) => ({ ...prev, error: backendError }));
+      } finally {
+        // Always clear loading unless a nested branch already navigated/returned
+        setLoading(false);
+      }
+    },
+    [formData, payload, setFormData, setLoading, router, originalSlug, setOriginalSlug]
+  );
+
+  /** Save and immediately reset to blank form (Add Another) */
   const handleSaveAndAddAnother = useCallback(async () => {
     setLoading(true);
     try {
-      const payload = {
-        ...formData,
-        tags: typeof formData.tags === 'string'
-          ? formData.tags.split(',').map((t) => t.trim()).filter(Boolean)
-          : Array.isArray(formData.tags) ? formData.tags : [],
-      };
-  await axios.post("/api/articles/", payload, { withCredentials: true });
+  await api.post("/articles/", payload);
+  toast("Your article has been saved!", "success");
       setFormData({
         id: "",
         title: "",
@@ -70,76 +247,96 @@ export function useArticleSave(formData, setFormData, setLoading, router) {
         created_date: "",
         updated_date: "",
       });
-    } catch (error) {
-      console.error("Error creating article:", error);
+    } catch (err) {
+      console.error("Error creating article:", err);
+      setFormData((prev: any) => ({
+        ...prev,
+        error: "Failed to create article.",
+      }));
     } finally {
       setLoading(false);
     }
-  }, [formData, setFormData, setLoading]);
+  }, [payload, setFormData, setLoading]);
 
-  // Save and continue editing
+  /** Save (create or update) and continue editing in place */
   const handleSaveAndContinue = useCallback(async () => {
     setLoading(true);
     try {
-      let response;
-      const payload = {
-        ...formData,
-        tags: typeof formData.tags === 'string'
-          ? formData.tags.split(',').map((t) => t.trim()).filter(Boolean)
-          : Array.isArray(formData.tags) ? formData.tags : [],
-      };
-      if (formData.id) {
-  response = await axios.put(`/api/articles/${formData.id}/`, payload, { withCredentials: true });
+      if (formData.id || originalSlug || formData.slug) {
+        const slug = String(originalSlug || payload.slug || formData.slug);
+        await api.put(`/articles/${slug}/`, payload);
+        if (setOriginalSlug) setOriginalSlug(String(payload.slug || ""));
       } else {
-  response = await axios.post("/api/articles/", payload, { withCredentials: true });
+        const response = await api.post("/articles/", payload);
         const newId = response?.data?.id ?? "";
-        if (newId) setFormData((prev) => ({ ...prev, id: newId }));
+        if (newId) setFormData((prev: any) => ({ ...prev, id: newId }));
       }
-    } catch (error) {
-      console.error("Error saving article:", error);
+      toast("Your article has been saved!", "success");
+    } catch (err) {
+      console.error("Error saving article:", err);
+      setFormData((prev: any) => ({
+        ...prev,
+        error: "Failed to save article.",
+      }));
     } finally {
       setLoading(false);
     }
-  }, [formData, setFormData, setLoading]);
+  }, [formData.id, formData.slug, originalSlug, payload, setFormData, setLoading, setOriginalSlug]);
 
-  // Save and return slug (for preview)
+  /** Save and return slug for preview consumers */
   const handleSaveAndGetSlug = useCallback(async () => {
     setLoading(true);
     try {
       let response;
-      const payload = {
-        ...formData,
-        tags: typeof formData.tags === 'string'
-          ? formData.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-          : Array.isArray(formData.tags) ? formData.tags : [],
-      };
-      if (formData.id) {
-  response = await axios.put(`/api/articles/${formData.id}/`, payload, { withCredentials: true });
+      if (formData.id || originalSlug || formData.slug) {
+        const slug = String(originalSlug || payload.slug || formData.slug);
+        response = await api.put(`/articles/${slug}/`, payload);
+        if (setOriginalSlug) setOriginalSlug(String(payload.slug || ""));
       } else {
-  response = await axios.post("/api/articles/", payload, { withCredentials: true });
+        response = await api.post("/articles/", payload);
         const newId = response?.data?.id ?? "";
         if (newId) setFormData((prev: any) => ({ ...prev, id: newId }));
       }
-      // Return the slug from the response if available, else from formData
-      return { slug: response?.data?.slug || formData.slug, error: null };
+      toast("Your article has been saved!", "success");
+      const returnedSlug =
+        response?.data?.slug ?? (formData.slug ? String(formData.slug) : null);
+      return { slug: returnedSlug, error: null };
     } catch (error: any) {
       let backendError = "Unknown error";
-      if (error.response && error.response.data) {
-        if (typeof error.response.data === 'string') {
-          backendError = error.response.data;
-        } else if (typeof error.response.data === 'object') {
-          backendError = Object.entries(error.response.data)
-            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-            .join(' | ');
+      const data = error?.response?.data;
+      if (data) {
+        if (typeof data === "string") {
+          backendError = data;
+        } else if (typeof data === "object") {
+          backendError = Object.entries(data)
+            .map(([k, v]) =>
+              `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
+            )
+            .join(" | ");
         }
-      } else if (error.message) {
+      } else if (error?.message) {
         backendError = error.message;
       }
       return { slug: null, error: backendError };
     } finally {
       setLoading(false);
     }
-  }, [formData, setFormData, setLoading]);
+  }, [formData.id, formData.slug, originalSlug, payload, setFormData, setLoading, setOriginalSlug]);
 
-  return { handleSave, handleSaveAndAddAnother, handleSaveAndContinue, handleSaveAndGetSlug };
+  // Ensure onResolve is always callable
+  const safeSlugConflict: SlugConflictState = {
+    ...slugConflict,
+    onResolve:
+      typeof slugConflict.onResolve === "function"
+        ? slugConflict.onResolve
+        : async () => {},
+  };
+
+  return {
+    handleSave,
+    handleSaveAndAddAnother,
+    handleSaveAndContinue,
+    handleSaveAndGetSlug,
+    slugConflict: safeSlugConflict,
+  };
 }

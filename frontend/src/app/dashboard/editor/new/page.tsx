@@ -6,8 +6,7 @@ import ClassificationTab from "./ClassificationTab";
 import AuthorsTab from "./AuthorsTab";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-// @ts-ignore
-import axios from "axios";
+import api from "@/lib/api";
 import { useInterval } from "react-use";
 import StudioHeader from "../StudioHeader";
 import ContentTab from "./ContentTab";
@@ -16,12 +15,15 @@ import SaveActions from "../SaveActions";
 import Sidebar from "./Sidebar";
 import { CATEGORY_CHOICES, authorOptions, coAuthorOptions } from "../functions/options";
 import { handleFormChange } from "../functions/formHandlers";
+import { SlugConflictDialog } from "@/components/ui/SlugConflictDialog";
 import { useArticleSave } from "../functions/useArticleSave";
 import type { FormDataState } from "./types";
 import { getNext6amET } from "./utils";
 
 export default function ArticleWriter() {
   const router = useRouter();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [originalSlug, setOriginalSlug] = useState<string | null>(null);
 
   // Height of StudioHeader: 72px (mobile), 88px (md+)
   // Add top padding to push content below fixed header
@@ -40,6 +42,7 @@ export default function ArticleWriter() {
     co_author: "",
     is_published: false,
     published_date: "",
+  last_published_update: "",
     scheduled_publish_time: "",
     tags: "",
     meta_description: "",
@@ -73,15 +76,17 @@ export default function ArticleWriter() {
 
   // AUTOSAVE (PUT to existing id)
   const autosave = useCallback(async () => {
-    if (!formData.id) return;
+    // Only autosave when we know which record to target
+    const targetSlug = originalSlug || (formData.slug ? String(formData.slug) : "");
+    if (!targetSlug) return;
     try {
       // If sending a file, you likely want FormData() here – left as JSON for parity with your code.
-      await axios.put(`/api/articles/${formData.id}/`, formData);
+      await api.put(`/articles/${targetSlug}/`, formData);
       // console.log("Autosaved successfully");
     } catch (error) {
       console.error("Autosave failed:", error);
     }
-  }, [formData]);
+  }, [formData, originalSlug]);
 
   // every 5 minutes
   useInterval(() => {
@@ -90,11 +95,13 @@ export default function ArticleWriter() {
 
 
   // Modular save actions
-  const { handleSave, handleSaveAndAddAnother, handleSaveAndContinue, handleSaveAndGetSlug } = useArticleSave(
+  const { handleSave, handleSaveAndAddAnother, handleSaveAndContinue, handleSaveAndGetSlug, slugConflict } = useArticleSave(
     formData,
     setFormData,
     setLoading,
-    router
+    router,
+    originalSlug,
+    setOriginalSlug
   );
 
   // Preview handler: save, then open preview tab
@@ -115,8 +122,68 @@ export default function ArticleWriter() {
     }
   }, [router]);
 
+  // Parse query once on mount to capture ?id=
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    setEditingId(id);
+  }, []);
+
+  // Load existing article into the form if editingId is present
+  useEffect(() => {
+    const id = editingId;
+    if (!id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+  const res = await api.get(`/articles/by-id`, { params: { id } });
+        const a = res.data;
+        if (cancelled) return;
+        setFormData((prev) => ({
+          ...prev,
+          id: String(a.id ?? ""),
+          title: a.title ?? "",
+          subtitle: a.subtitle ?? "",
+          slug: a.slug ?? "",
+          summary: a.summary ?? "",
+          content: a.content ?? "",
+          featured_image: null, // direct upload not round-tripped; keep null
+          featured_image_asset: a.featured_image_asset ?? "",
+          category: a.category ?? "POLITICS",
+          is_breaking_news: Boolean(a.is_breaking_news),
+          author: typeof a.author === "object" ? String(a.author.id ?? "1") : (a.author ?? "1"),
+          co_author: a.co_author ? String(a.co_author) : "",
+          is_published: Boolean(a.is_published),
+          published_date: a.published_date ?? "",
+          last_published_update: a.last_published_update ?? "",
+          scheduled_publish_time: a.scheduled_publish_time ?? "",
+          tags: Array.isArray(a.tags_list) ? a.tags_list.join(", ") : "",
+          meta_description: a.meta_description ?? "",
+          view_count: a.view_count ?? 0,
+          created_date: a.created_date ?? "",
+          updated_date: a.updated_date ?? "",
+        }));
+        setOriginalSlug(a.slug ?? null);
+      } catch (e: any) {
+        console.error("Failed to load article:", e);
+        setErrorMsg("Failed to load article.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editingId]);
+
   return (
     <>
+      {/* Slug conflict dialog */}
+      <SlugConflictDialog
+        isOpen={slugConflict.isOpen}
+        currentSlug={slugConflict.currentSlug}
+        title={slugConflict.title}
+        onResolve={slugConflict.onResolve}
+      />
       <StudioHeader user={{ name: "Admin" }} onBack={() => setShowBackModal(true)} />
   <div className="min-h-screen p-8 flex flex-row gap-12 pt-[88px] md:pt-[104px]" style={{ background: '#eef8feff' }}>
         <Sidebar
@@ -145,15 +212,18 @@ export default function ArticleWriter() {
           <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
             <span>Last updated:</span>
             <span className="font-medium text-gray-700">
-              {formData.updated_date
-                ? new Date(formData.updated_date).toLocaleString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "-"}
+              {(() => {
+                const ts = formData.last_published_update || formData.updated_date;
+                return ts
+                  ? new Date(ts).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "-";
+              })()}
             </span>
             <span>by</span>
             <span className="font-semibold text-gray-700">{formData.author || "-"}</span>
@@ -189,7 +259,7 @@ export default function ArticleWriter() {
             </div>
           )}
 
-          <h2 className="text-lg font-bold mb-8 text-slate-800">Write a New Article</h2>
+          <h2 className="text-lg font-bold mb-8 text-slate-800">{formData.id ? "Edit Article" : "Write a New Article"}</h2>
 
           {/* Main content area, no card/box */}
           <section className="flex flex-col gap-10">

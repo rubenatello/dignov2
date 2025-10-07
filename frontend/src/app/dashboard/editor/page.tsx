@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
+import api from "@/lib/api";
 import type { Article } from "@/types/article";
 
 function ProfileDropdown() {
@@ -40,10 +41,18 @@ export default function EditorListPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/articles/")
-      .then(res => res.json())
-      .then(data => setArticles(data.results || []))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/articles/');
+        if (!cancelled) setArticles(res.data.results || res.data || []);
+      } catch (e) {
+        console.error('Failed to load articles', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -80,7 +89,8 @@ export default function EditorListPage() {
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">Author</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">Co-Author</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">Status</th>
-                  <th className="px-3 py-2 text-left font-semibold text-gray-600">Published date</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-600">Published</th>
+                  <th className="px-3 py-2 text-left font-semibold text-gray-600">Updated</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">View count</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">Created date</th>
                   <th className="px-3 py-2"></th>
@@ -108,12 +118,24 @@ export default function EditorListPage() {
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold">DRAFT</span>
                       )}
                     </td>
-                    <td className="px-3 py-2">{a.published_date ? a.published_date : '-'}</td>
+                    <td className="px-3 py-2">
+                      {a.published_date ? new Date(a.published_date).toLocaleString() : '-'}
+                    </td>
+                    <td className="px-3 py-2">
+                      {a.last_published_update ? (
+                        <div className="inline-flex items-center gap-2">
+                          <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-semibold">Updated</span>
+                          <span>{new Date(a.last_published_update).toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2">{a.view_count ?? '-'}</td>
                     <td className="px-3 py-2">{a.created_date ?? '-'}</td>
                     <td className="px-3 py-2">
                       <Link
-                        href={`/dashboard/editor/${a.id}`}
+                        href={`/dashboard/editor/new?id=${a.id}`}
                         className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition no-underline"
                         style={{ color: 'var(--white)', textDecoration: 'none' }}
                       >

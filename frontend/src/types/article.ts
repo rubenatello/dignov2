@@ -26,6 +26,7 @@ export type Article = {
   is_breaking_news: boolean;
   is_published: boolean;
   published_date?: string | null;
+  last_published_update?: string | null;
   scheduled_publish_time?: string | null;
   created_date?: string | null;
   updated_date?: string | null;

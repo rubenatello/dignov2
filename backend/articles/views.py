@@ -75,12 +75,19 @@ class ArticleViewSet(viewsets.ModelViewSet):
         return ArticleDetailSerializer
 
     def create(self, request, *args, **kwargs):
+        # Log the incoming request data for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"[ARTICLE CREATE] Request data: {request.data}")
+        
         serializer = self.get_serializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
+            logger.error(f"[ARTICLE CREATE] Validation errors: {serializer.errors}")
             return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         try:
             self.perform_create(serializer)
         except Exception as e:
+            logger.error(f"[ARTICLE CREATE] Exception: {str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -141,4 +148,32 @@ class ArticleViewSet(viewsets.ModelViewSet):
         ).order_by('-view_count')[:5]
         
         serializer = ArticleListSerializer(featured_articles, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def exists(self, request):
+        """Check if an article slug already exists. Ignores publish status.
+
+        Query params:
+            - slug: the slug to check
+        Returns: { exists: bool, id: number|null }
+        """
+        slug = request.query_params.get('slug')
+        if not slug:
+            return Response({ 'exists': False, 'id': None }, status=status.HTTP_400_BAD_REQUEST)
+        obj = Article.objects.filter(slug=slug).values('id').first()
+        return Response({ 'exists': bool(obj), 'id': obj['id'] if obj else None })
+
+    @action(detail=False, methods=['get'], url_path='by-id')
+    def by_id(self, request):
+        """Fetch one article by numeric id. Useful for the editor when we only have id."""
+        try:
+            article_id = int(request.query_params.get('id', ''))
+        except Exception:
+            return Response({'error': 'Invalid id'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            obj = Article.objects.select_related('author', 'co_author', 'featured_image_asset').get(id=article_id)
+        except Article.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ArticleDetailSerializer(obj, context={'request': request})
         return Response(serializer.data)

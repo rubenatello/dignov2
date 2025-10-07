@@ -17,6 +17,7 @@ export type FormDataState = {
   co_author: string;
   is_published: boolean;
   published_date: string;
+  last_published_update: string;
   scheduled_publish_time: string;
   tags: string;
   meta_description: string;
