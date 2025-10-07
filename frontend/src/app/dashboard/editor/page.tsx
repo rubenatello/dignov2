@@ -92,15 +92,14 @@ export default function EditorListPage() {
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">Published</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">Updated</th>
                   <th className="px-3 py-2 text-left font-semibold text-gray-600">View count</th>
-                  <th className="px-3 py-2 text-left font-semibold text-gray-600">Created date</th>
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody>
                 {articles.map(a => (
                   <tr key={a.id} className="border-t hover:bg-gray-50">
-                    <td className="px-3 py-2 font-mono text-blue-700 font-bold">{a.id}</td>
-                    <td className="px-3 py-2">{a.title}</td>
+                    <td className="px-3 py-2 font-mono-bold text-blue-900 font-bold">{a.id}</td>
+                    <td className="px-3 py-2 font-semibold text-secondary">{a.title}</td>
                     <td className="px-3 py-2">{a.category}</td>
                     <td className="px-3 py-2">
                       {a.is_breaking_news ? (
