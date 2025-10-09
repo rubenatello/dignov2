@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+// Note: Avoid useSearchParams due to environment; parse from window.location
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import api from '../../lib/api';
+import { fixMediaUrl } from '@/lib/media';
 
 interface Article {
   id: number;
@@ -17,20 +18,19 @@ interface Article {
   published_date: string;
   slug: string;
   featured_image?: string;
+  featured_image_data?: { url: string };
 }
 
-const mediaOrigin = process.env.NEXT_PUBLIC_MEDIA_ORIGIN || '';
-const abs = (url?: string) =>
-  url && url.startsWith('/') ? `${mediaOrigin}${url}` : url || '';
+const abs = (url?: string) => fixMediaUrl(url || '');
 
 const ArticleCard = ({ article }: { article: Article }) => (
   <article className="group cursor-pointer border-b border-gray-200 pb-6 mb-6">
     <div className="flex flex-col md:flex-row gap-4">
       <div className="md:w-1/3">
         <div className="aspect-video bg-gray-200 overflow-hidden rounded-lg">
-          {article.featured_image ? (
+          {article.featured_image || article.featured_image_data?.url ? (
             <img
-              src={abs(article.featured_image)}
+              src={abs(article.featured_image_data?.url || article.featured_image)}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -67,8 +67,13 @@ const ArticleCard = ({ article }: { article: Article }) => (
 );
 
 export default function SearchPage() {
-  const searchParams = useSearchParams();
-  const query = searchParams?.get('q') || '';
+  const [query, setQuery] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setQuery(params.get('q') || '');
+    }
+  }, []);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

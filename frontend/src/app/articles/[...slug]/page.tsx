@@ -25,16 +25,17 @@ type Article = {
   co_author?: any;
 };
 
-export default function ArticlePreviewPage() {
-  const [pathSlug, setPathSlug] = useState('');
+export default function ArticleLivePage() {
+  const [leafSlug, setLeafSlug] = useState('');
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // URL pattern: /articles/preview/:slug
-      const m = window.location.pathname.match(/\/articles\/preview\/(.+)$/);
-      setPathSlug(m?.[1] || '');
+      // URL pattern: /articles/.../leaf
+      const m = window.location.pathname.match(/\/articles\/(.+)$/);
+      const full = m?.[1] || '';
+      const leaf = full.split('/').filter(Boolean).pop() || '';
+      setLeafSlug(leaf);
     }
   }, []);
-  const slug = pathSlug;
   const [article, setArticle] = useState<Article | null>(null);
   const [related, setRelated] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export default function ArticlePreviewPage() {
     (async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/articles/${slug}/`);
+        const res = await api.get(`/articles/${leafSlug}/`);
         if (cancelled) return;
         const a: Article = res.data;
         setArticle(a);
@@ -60,17 +61,16 @@ export default function ArticlePreviewPage() {
           // Non-fatal
         }
       } catch (e: any) {
-        setError('Article not found or you do not have access.');
+        setError('Article not found.');
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [leafSlug]);
 
   const categoryLabel = useMemo(() => {
     if (!article?.category) return '';
-    // Map enum keys to readable labels if needed
     return article.category.replace(/_/g, ' ');
   }, [article?.category]);
 
@@ -81,7 +81,7 @@ export default function ArticlePreviewPage() {
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 py-6">
           {loading && (
-            <div className="text-gray-500">Loading preview…</div>
+            <div className="text-gray-500">Loading…</div>
           )}
           {!loading && error && (
             <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">{error}</div>
@@ -90,11 +90,6 @@ export default function ArticlePreviewPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Main article */}
               <article className="lg:col-span-8">
-                {!article.is_published && (
-                  <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded mb-4 text-center font-semibold text-sm">
-                    Preview Mode: This article is not published
-                  </div>
-                )}
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-1">{article.title}</h1>
                 {article.subtitle && (
                   <h2 className="text-xl md:text-2xl font-medium text-slate-800 mb-3">{article.subtitle}</h2>

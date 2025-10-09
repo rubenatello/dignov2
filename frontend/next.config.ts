@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         destination: `${target}/api/:path*/`, // always add trailing slash
       },
+      // Proxy media files from backend so browser can load /media/* from frontend origin
+      {
+        source: '/media/:path*',
+        destination: `${target}/media/:path*`, // IMPORTANT: no trailing slash for files
+      },
     ];
   },
   trailingSlash: true,

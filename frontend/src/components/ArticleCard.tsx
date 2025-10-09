@@ -1,6 +1,5 @@
-import { Article } from '@/lib/types';
+import type { Article } from '@/types/article';
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface ArticleCardProps {
   article: Article;
@@ -17,26 +16,25 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <article className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-      {article.featured_image && (
-        <div className="relative h-48 w-full">
-          <Image
-            src={article.featured_image}
-            alt={article.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-      )}
+      {(() => {
+        const imgSrc = (article as any).featured_image_data?.url || article.featured_image || '';
+        return imgSrc ? (
+          <div className="relative h-48 w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imgSrc} alt={article.title} className="w-full h-full object-cover" />
+          </div>
+        ) : null;
+      })()}
       
       <div className="p-6">
         <div className="flex items-center text-sm text-gray-600 mb-2">
-          <span>{article.author.full_name}</span>
+          <span>{(article as any).author?.full_name || (article as any).author || ''}</span>
           <span className="mx-2">•</span>
-          <time dateTime={article.published_date}>
-            {formatDate(article.published_date)}
+          <time dateTime={(article as any).published_date}>
+            {formatDate((article as any).published_date)}
           </time>
           <span className="mx-2">•</span>
-          <span>{article.view_count} views</span>
+          <span>{(article as any).view_count} views</span>
         </div>
         
         <h2 className="text-xl font-semibold text-gray-900 mb-3 hover:text-primary">
@@ -49,9 +47,9 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           {article.summary}
         </p>
         
-        {article.tags_list.length > 0 && (
+        {(article as any).tags_list && (article as any).tags_list.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {article.tags_list.map((tag, index) => (
+            {(article as any).tags_list.map((tag: string, index: number) => (
               <span
                 key={index}
                 className="bg-accent text-secondary text-xs px-2 py-1 rounded-full"

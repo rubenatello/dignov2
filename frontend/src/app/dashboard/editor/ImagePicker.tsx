@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fixMediaUrl } from "@/lib/media";
 
 export interface ImageAsset {
   id: number;
@@ -60,7 +61,7 @@ export default function ImagePicker({ value, onChange, showUpload }: ImagePicker
                 onClick={() => onChange(img.id, img)}
                 title={img.formatted_caption}
               >
-                <img src={img.image_url} alt={img.alt_text} className="w-full h-24 object-cover rounded mb-1" />
+                <img src={fixMediaUrl(img.image_url)} alt={img.alt_text} className="w-full h-24 object-cover rounded mb-1" />
                 <div className="text-xs font-semibold truncate">{img.title}</div>
                 <div className="text-xs text-gray-500 truncate">{img.source}</div>
               </div>

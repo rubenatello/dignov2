@@ -113,7 +113,9 @@ export default function ArticleWriter() {
     setErrorMsg(null);
     const { slug, error } = await handleSaveAndGetSlug();
     if (slug) {
-      window.open(`/articles/${slug}`, '_blank');
+      // Preview uses only the headline slug (no date path)
+      const leaf = String(slug).split('/').filter(Boolean).pop();
+      if (leaf) window.open(`/articles/preview/${leaf}`, '_blank');
     } else {
       setErrorMsg(error || 'Unable to preview: could not save or generate slug.');
     }

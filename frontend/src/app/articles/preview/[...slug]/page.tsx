@@ -26,15 +26,16 @@ type Article = {
 };
 
 export default function ArticlePreviewPage() {
-  const [pathSlug, setPathSlug] = useState('');
+  const [leafSlug, setLeafSlug] = useState('');
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // URL pattern: /articles/preview/:slug
+      // URL pattern: /articles/preview/.../leaf
       const m = window.location.pathname.match(/\/articles\/preview\/(.+)$/);
-      setPathSlug(m?.[1] || '');
+      const full = m?.[1] || '';
+      const leaf = full.split('/').filter(Boolean).pop() || '';
+      setLeafSlug(leaf);
     }
   }, []);
-  const slug = pathSlug;
   const [article, setArticle] = useState<Article | null>(null);
   const [related, setRelated] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export default function ArticlePreviewPage() {
     (async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/articles/${slug}/`);
+        const res = await api.get(`/articles/${leafSlug}/`);
         if (cancelled) return;
         const a: Article = res.data;
         setArticle(a);
@@ -66,11 +67,10 @@ export default function ArticlePreviewPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [leafSlug]);
 
   const categoryLabel = useMemo(() => {
     if (!article?.category) return '';
-    // Map enum keys to readable labels if needed
     return article.category.replace(/_/g, ' ');
   }, [article?.category]);
 

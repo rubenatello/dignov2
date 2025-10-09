@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../lib/api'; // <-- use the axios client
+import { fixMediaUrl } from '@/lib/media';
 
 interface Article {
   id: number;
@@ -20,21 +21,20 @@ interface Article {
   published_date: string;
   slug: string;
   featured_image?: string;
+  featured_image_data?: { url: string };
 }
 
 // (Optional) If Django returns relative media paths like "/media/…"
 // set NEXT_PUBLIC_MEDIA_ORIGIN (e.g. http://localhost:8000) or ignore this if your API already returns absolute URLs.
-const mediaOrigin = process.env.NEXT_PUBLIC_MEDIA_ORIGIN || '';
-const abs = (url?: string) =>
-  url && url.startsWith('/') ? `${mediaOrigin}${url}` : url || '';
+const abs = (url?: string) => fixMediaUrl(url || '');
 
 
 const ArticleCard = ({ article }: { article: Article }) => (
   <article className="group cursor-pointer">
     <div className="aspect-video bg-gray-200 mb-4 overflow-hidden rounded-lg">
-      {article.featured_image ? (
+      {article.featured_image || article.featured_image_data?.url ? (
         <img
-          src={abs(article.featured_image)}
+          src={abs(article.featured_image_data?.url || article.featured_image)}
           alt={article.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />

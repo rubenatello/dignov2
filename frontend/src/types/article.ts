@@ -19,6 +19,7 @@ export type Article = {
   title: string;
   slug: string;
   content?: string;
+  subtitle?: string;
   summary: string;
   author: UserRef | string;
   co_author?: UserRef | string | null;
