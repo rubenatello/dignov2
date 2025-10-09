@@ -6,11 +6,15 @@
   --background: #fffbed;
   --foreground: #2d2d2d;
   --white: #ffffff;
+  --cream: #fff8de;
   --primary: #202020;
   --secondary: #242424;
   --accent: #fffbed;
   --accent-light: #f8fbff;
   --cta: #ff6a07;
+  /* Slightly darker shade of CTA for hover states */
+  --cta-darken: #f16d15;
+  --primary-lighten: #313131;
   --font-sans: 'Roboto', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Playfair Display', serif;
 }
@@ -23,6 +27,7 @@
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-cta: var(--cta);
+  --color-cta-darken: var(--cta-darken);
   --font-sans: ui-sans-serif, system-ui, sans-serif;
 }
 

@@ -7,7 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # include role so the frontend can filter/use it
-        fields = ("id", "first_name", "last_name", "email", "role")
+        fields = ("id", "first_name", "last_name", "email", "role", "is_staff", "is_superuser", "username")
 
 
 class LoginSerializer(serializers.Serializer):

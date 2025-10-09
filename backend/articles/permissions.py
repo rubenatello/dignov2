@@ -16,6 +16,11 @@ class IsWriterOrEditorOrReadOnly(permissions.BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if user.is_superuser:
+        # Superusers always allowed
+        if getattr(user, 'is_superuser', False):
             return True
+        # DELETE is restricted to editors or staff (superusers handled above)
+        if request.method == 'DELETE':
+            return getattr(user, 'role', None) == 'editor' or getattr(user, 'is_staff', False)
+        # Other unsafe methods allowed for writers and editors
         return getattr(user, 'role', None) in ("writer", "editor")

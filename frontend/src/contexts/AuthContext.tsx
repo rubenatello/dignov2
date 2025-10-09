@@ -19,13 +19,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
+    // Try to fetch user profile on mount. Works with either session or token auth.
+    fetchUser();
   }, []);
 
   const fetchUser = async () => {
@@ -33,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.get('/auth/profile/');
       setUser(response.data);
     } catch (error) {
+      // Not authenticated via token or session
       localStorage.removeItem('token');
       console.error('Failed to fetch user:', error);
     } finally {

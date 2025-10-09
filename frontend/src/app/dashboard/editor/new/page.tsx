@@ -19,9 +19,12 @@ import { SlugConflictDialog } from "@/components/ui/SlugConflictDialog";
 import { useArticleSave } from "../functions/useArticleSave";
 import type { FormDataState } from "./types";
 import { getNext6amET } from "./utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/Toast";
 
 export default function ArticleWriter() {
   const router = useRouter();
+  const { user } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [originalSlug, setOriginalSlug] = useState<string | null>(null);
 
@@ -70,6 +73,7 @@ export default function ArticleWriter() {
   };
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Change handler (modularized)
   const handleChange = handleFormChange<FormDataState>(setFormData);
@@ -114,6 +118,23 @@ export default function ArticleWriter() {
       setErrorMsg(error || 'Unable to preview: could not save or generate slug.');
     }
   };
+
+  const handleDelete = useCallback(async () => {
+    const targetSlug = originalSlug || (formData.slug ? String(formData.slug) : "");
+    if (!targetSlug) {
+      toast("No slug available to delete.", "error");
+      return;
+    }
+    try {
+      await api.delete(`/articles/${targetSlug}/`);
+      toast("Article deleted.", "success");
+      router.push('/dashboard/editor');
+    } catch (e: any) {
+      console.error('Failed to delete article', e);
+      const msg = e?.response?.status === 403 ? 'You do not have permission to delete this article.' : 'Failed to delete article.';
+      toast(msg, "error");
+    }
+  }, [api, originalSlug, formData.slug, router]);
 
   // Basic router guard (optional)
   useEffect(() => {
@@ -184,6 +205,42 @@ export default function ArticleWriter() {
         title={slugConflict.title}
         onResolve={slugConflict.onResolve}
       />
+      {/* Delete confirmation modal (page-level to center reliably) */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center px-4"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-5 max-w-xs w-full relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold mb-2 text-red-700">Delete article?</h2>
+            <p className="mb-5 text-gray-600 text-sm">This action cannot be undone.</p>
+            <div className="flex gap-2 justify-end">
+              <button
+                className="px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-medium"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 py-1.5 rounded bg-red-600 text-white hover:bg-red-700 font-medium"
+                onClick={async () => {
+                  try {
+                    setShowDeleteConfirm(false);
+                    await handleDelete();
+                  } catch (e) {
+                    // toast handled in delete
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <StudioHeader user={{ name: "Admin" }} onBack={() => setShowBackModal(true)} />
   <div className="min-h-screen p-8 flex flex-row gap-12 pt-[88px] md:pt-[104px]" style={{ background: '#eef8feff' }}>
         <Sidebar
@@ -201,6 +258,9 @@ export default function ArticleWriter() {
             !formData.content?.replace(/<[^>]+>/g, '').trim() ||
             !formData.author?.trim()
           }
+          canDelete={Boolean(formData.id)}
+          onDelete={handleDelete}
+          onOpenDeleteConfirm={() => setShowDeleteConfirm(true)}
         />
         <main className="flex-1 max-w-3xl mx-auto">
           {errorMsg && (

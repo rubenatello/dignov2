@@ -30,7 +30,7 @@ export default function TopBar() {
             <span className="text-accent">{formatted ? formatted : ''}</span>
           </div>
           <div className="flex space-x-4">
-            <button className="bg-cta text-white px-4 py-1 rounded text-sm font-medium hover:bg-gray-600">
+            <button className="bg-cta text-white px-4 py-1 rounded text-sm font-medium hover:bg-cta-darken">
               SUBSCRIBE
             </button>
             <button className="bg-accent px-4 py-1 rounded text-primary hover:bg-gray-200 font-medium">

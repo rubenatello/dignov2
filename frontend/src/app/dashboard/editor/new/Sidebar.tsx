@@ -1,6 +1,6 @@
 
 
-import React from "react";
+import React, { useState } from "react";
 import {
   DocumentTextIcon,
   PhotoIcon,
@@ -22,8 +22,12 @@ interface SidebarProps {
   slug?: string;
   onPreview: () => void;
   previewDisabled: boolean;
+  canDelete?: boolean;
+  onDelete?: () => Promise<void> | void;
+  onOpenDeleteConfirm?: () => void;
 }
 import SaveActions from "../SaveActions";
+import { useAuth } from "@/contexts/AuthContext";
 
 const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "content", label: "Content", icon: <DocumentTextIcon className="w-5 h-5" /> },
@@ -36,7 +40,11 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ];
 
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onSave, onSaveAndAddAnother, onSaveAndContinue, slug, onPreview, previewDisabled }) => (
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onSave, onSaveAndAddAnother, onSaveAndContinue, slug, onPreview, previewDisabled, canDelete, onDelete, onOpenDeleteConfirm }) => {
+  const { user } = useAuth();
+  const allowDelete = Boolean(canDelete) && Boolean(user && (user.is_superuser || user.is_staff || user.role === 'editor'));
+
+  return (
   <aside
     className="min-h-[calc(100vh-48px)] w-56 bg-white/80 backdrop-blur-md border-r border-gray-200 shadow-lg flex flex-col py-8 px-2 gap-2 sticky top-0 z-20"
     style={{ boxShadow: '0 4px 32px 0 rgba(30, 64, 175, 0.06)' }}
@@ -73,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onS
         />
         <button
           type="button"
-          className="bg-white border border-primary text-primary font-semibold px-2 py-1 rounded-md hover:bg-primary hover:text-white transition disabled:opacity-50 mt-2"
+          className="bg-white border border-primary text-primary text-sm font-semibold px-4 py-2 rounded-md hover:bg-primary hover:text-white transition disabled:opacity-50 mt-2"
           style={{ boxShadow: '0 2px 8px 0 rgba(81, 111, 255, 0.07)' }}
           onClick={onPreview}
           disabled={loading || previewDisabled}
@@ -81,8 +89,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, loading, onS
         >
           Preview Article
         </button>
+        {allowDelete && (
+          <>
+            <button
+              type="button"
+              className="bg-red-50 border border-red-300 text-red-700 text-sm font-semibold px-4 py-2 rounded-md hover:bg-red-600 hover:text-white transition disabled:opacity-50 mt-2"
+              onClick={() => onOpenDeleteConfirm?.()}
+              disabled={loading}
+              title="Delete this article"
+            >
+              Delete Article
+            </button>
+          </>
+        )}
       </div>
   </aside>
-);
+  );
+};
 
 export default Sidebar;
