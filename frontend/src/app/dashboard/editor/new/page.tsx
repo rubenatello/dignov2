@@ -5,7 +5,6 @@ import PublishingTab from "./PublishingTab";
 import ClassificationTab from "./ClassificationTab";
 import AuthorsTab from "./AuthorsTab";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useInterval } from "react-use";
 import StudioHeader from "../StudioHeader";
@@ -23,7 +22,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/Toast";
 
 export default function ArticleWriter() {
-  const router = useRouter();
+  const router = {
+    push: (path: string) => {
+      if (typeof window !== "undefined") window.location.assign(path);
+    },
+  };
   const { user } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [originalSlug, setOriginalSlug] = useState<string | null>(null);
@@ -73,6 +76,7 @@ export default function ArticleWriter() {
   };
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showSummaryLimitModal, setShowSummaryLimitModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Change handler (modularized)
@@ -118,6 +122,9 @@ export default function ArticleWriter() {
       if (leaf) window.open(`/articles/preview/${leaf}`, '_blank');
     } else {
       setErrorMsg(error || 'Unable to preview: could not save or generate slug.');
+      if (error && String(error).toLowerCase().includes('summary') && String(error).includes('300')) {
+        setShowSummaryLimitModal(true);
+      }
     }
   };
 
@@ -138,12 +145,17 @@ export default function ArticleWriter() {
     }
   }, [api, originalSlug, formData.slug, router]);
 
-  // Basic router guard (optional)
+  // Open modal if any save set the form error to summary length violation
   useEffect(() => {
-    if (!router) {
-      console.error("NextRouter is not mounted.");
+    const err = (formData as any)?.error as string | undefined;
+    if (err) {
+      setErrorMsg(err);
+      const lower = err.toLowerCase();
+      if (lower.includes("summary") && lower.includes("300")) {
+        setShowSummaryLimitModal(true);
+      }
     }
-  }, [router]);
+  }, [formData]);
 
   // Parse query once on mount to capture ?id=
   useEffect(() => {
@@ -268,6 +280,34 @@ export default function ArticleWriter() {
           {errorMsg && (
             <div className="mb-4 p-3 rounded bg-red-100 border border-red-300 text-red-800 text-sm">
               <b>Backend Error:</b> {errorMsg}
+            </div>
+          )}
+          {showSummaryLimitModal && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 px-4" onClick={() => setShowSummaryLimitModal(false)}>
+              <div className="bg-white rounded-lg shadow-lg p-5 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-base font-semibold text-red-700 mb-2">Summary is too long</h3>
+                <p className="text-sm text-gray-700 mb-4">
+                  Your summary exceeds the 300 character limit. Please shorten it to 300 characters or fewer and try again.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 font-medium"
+                    onClick={() => setShowSummaryLimitModal(false)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    className="px-3 py-1.5 rounded bg-primary text-white hover:bg-primary-dark font-medium"
+                    onClick={() => {
+                      setShowSummaryLimitModal(false);
+                      const el = document.getElementById('summary-input');
+                      if (el) (el as HTMLTextAreaElement).focus();
+                    }}
+                  >
+                    Go to Summary
+                  </button>
+                </div>
+              </div>
             </div>
           )}
           {/* Last updated info */}

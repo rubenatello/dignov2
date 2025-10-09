@@ -11,7 +11,7 @@ export default function BreakingBar({ items }: { items: ArticleListItem[] }) {
         <ul className="flex items-center gap-6">
           {items.slice(0,5).map(item => (
             <li key={item.id} className="text-xs md:text-sm">
-              <Link href={`/articles/${item.slug}`} className="hover:underline">
+              <Link href={`/articles/${item.slug}`} className="hover:underline text-white">
                 {item.title}
               </Link>
             </li>

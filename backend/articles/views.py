@@ -165,6 +165,111 @@ class ArticleViewSet(viewsets.ModelViewSet):
         serializer = ArticleListSerializer(qs, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='analytics/top-viewed')
+    def analytics_top_viewed(self, request):
+        """Return top viewed published articles within a timeframe.
+
+        Query params:
+          - days (int): lookback window in days (default 30)
+          - limit (int): number of results (default 5)
+        """
+        from datetime import timedelta
+        try:
+            days = int(request.query_params.get('days', '30'))
+        except Exception:
+            days = 30
+        try:
+            limit = int(request.query_params.get('limit', '5'))
+        except Exception:
+            limit = 5
+        since = timezone.now() - timedelta(days=days)
+        qs = (
+            self.get_queryset()
+            .filter(is_published=True, published_date__gte=since)
+            .order_by('-view_count')[: max(1, min(limit, 50))]
+        )
+        serializer = ArticleListSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='analytics/trending')
+    def analytics_trending(self, request):
+        """Return trending articles scored by simple recency-weighted views.
+
+        Score = view_count / max(1, days_since_publish)
+        Query params:
+          - days (int): consider only items published within last N days (default 14)
+          - limit (int): number of results (default 5)
+        """
+        from datetime import timedelta
+        import math
+        try:
+            days = int(request.query_params.get('days', '14'))
+        except Exception:
+            days = 14
+        try:
+            limit = int(request.query_params.get('limit', '5'))
+        except Exception:
+            limit = 5
+        since = timezone.now() - timedelta(days=days)
+        qs = (
+            self.get_queryset()
+            .filter(is_published=True, published_date__gte=since)
+        )
+        items = []
+        now = timezone.now()
+        for a in qs:
+            if not a.published_date:
+                continue
+            delta_days = max(1, (now - a.published_date).days or 0)
+            score = float(a.view_count or 0) / float(delta_days)
+            items.append({
+                'id': a.id,
+                'title': a.title,
+                'slug': a.slug,
+                'category': a.category,
+                'published_date': a.published_date,
+                'view_count': a.view_count,
+                'score': round(score, 2),
+            })
+        items.sort(key=lambda x: x['score'], reverse=True)
+        return Response(items[: max(1, min(limit, 50))])
+
+    @action(detail=False, methods=['get'], url_path='analytics/tags')
+    def analytics_tags(self, request):
+        """Return top tags by frequency within a timeframe.
+
+        Query params:
+          - days (int): lookback window in days (default 30)
+          - limit (int): number of results (default 10)
+        """
+        from datetime import timedelta
+        try:
+            days = int(request.query_params.get('days', '30'))
+        except Exception:
+            days = 30
+        try:
+            limit = int(request.query_params.get('limit', '10'))
+        except Exception:
+            limit = 10
+        since = timezone.now() - timedelta(days=days)
+        qs = self.get_queryset().filter(is_published=True, published_date__gte=since)
+        counts = {}
+        for a in qs:
+            # Prefer tags_list if serializer/model provides it; fall back to CSV in 'tags'
+            tags_list = getattr(a, 'tags_list', None)
+            if tags_list is None:
+                raw = (a.tags or '')
+                tags_list = [t.strip() for t in raw.split(',') if t.strip()]
+            for t in tags_list or []:
+                key = str(t).strip()
+                if not key:
+                    continue
+                counts[key] = counts.get(key, 0) + 1
+        # Sort by frequency desc
+        top = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[: max(1, min(limit, 50))]
+        data = [{ 'tag': k, 'count': v } for k, v in top]
+        return Response(data)
+
     @action(detail=False, methods=['get'])
     def exists(self, request):
         """Check if an article slug already exists. Ignores publish status.

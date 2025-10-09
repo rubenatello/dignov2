@@ -109,6 +109,16 @@ export function useArticleSave(
    */
   const handleSave = useCallback(
     async (isRetry = false) => {
+      // Client-side preflight: enforce summary length <= 300
+      const summaryLen = String(formData.summary || "").length;
+      if (summaryLen > 300) {
+        toast("Summary must be 300 characters or fewer.", "error");
+        setFormData((prev: any) => ({
+          ...prev,
+          error: "summary: Ensure this field has no more than 300 characters.",
+        }));
+        return;
+      }
       setLoading(true);
       try {
         const isEditing = Boolean(originalSlug || formData.id);
@@ -222,6 +232,16 @@ export function useArticleSave(
 
   /** Save and immediately reset to blank form (Add Another) */
   const handleSaveAndAddAnother = useCallback(async () => {
+    // Client-side preflight: enforce summary length <= 300
+    const summaryLen = String(formData.summary || "").length;
+    if (summaryLen > 300) {
+      toast("Summary must be 300 characters or fewer.", "error");
+      setFormData((prev: any) => ({
+        ...prev,
+        error: "summary: Ensure this field has no more than 300 characters.",
+      }));
+      return;
+    }
     setLoading(true);
     try {
   await api.post("/articles/", payload);
@@ -260,6 +280,16 @@ export function useArticleSave(
 
   /** Save (create or update) and continue editing in place */
   const handleSaveAndContinue = useCallback(async () => {
+    // Client-side preflight: enforce summary length <= 300
+    const summaryLen = String(formData.summary || "").length;
+    if (summaryLen > 300) {
+      toast("Summary must be 300 characters or fewer.", "error");
+      setFormData((prev: any) => ({
+        ...prev,
+        error: "summary: Ensure this field has no more than 300 characters.",
+      }));
+      return;
+    }
     setLoading(true);
     try {
       if (formData.id || originalSlug || formData.slug) {
@@ -285,6 +315,14 @@ export function useArticleSave(
 
   /** Save and return slug for preview consumers */
   const handleSaveAndGetSlug = useCallback(async () => {
+    // Client-side preflight: enforce summary length <= 300
+    const summaryLen = String(formData.summary || "").length;
+    if (summaryLen > 300) {
+      const msg = "summary: Ensure this field has no more than 300 characters.";
+      toast("Summary must be 300 characters or fewer.", "error");
+      setFormData((prev: any) => ({ ...prev, error: msg }));
+      return { slug: null, error: msg };
+    }
     setLoading(true);
     try {
       let response;

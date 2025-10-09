@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import api from "@/lib/api";
 import type { Article } from "@/types/article";
+import Analytics from "./Analytics";
 
 function ProfileDropdown() {
   const [open, setOpen] = useState(false);
@@ -38,14 +39,40 @@ function ProfileDropdown() {
 
 export default function EditorListPage() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [allArticles, setAllArticles] = useState<Article[] | null>(null); // fallback if backend not paginated
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [isPaginated, setIsPaginated] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get('/articles/');
-        if (!cancelled) setArticles(res.data.results || res.data || []);
+        setLoading(true);
+        const res = await api.get('/articles/', { params: { page, page_size: pageSize } });
+        const data = res.data;
+        // DRF PageNumberPagination style: { count, next, previous, results }
+        if (data && typeof data === 'object' && Array.isArray(data.results)) {
+          if (cancelled) return;
+          setIsPaginated(true);
+          setAllArticles(null);
+          setArticles(data.results);
+          setTotalCount(typeof data.count === 'number' ? data.count : null);
+        } else if (Array.isArray(data)) {
+          // Fallback: no pagination on backend, do client-side
+          if (cancelled) return;
+          setIsPaginated(false);
+          setAllArticles(data);
+          setTotalCount(data.length);
+          const start = (page - 1) * pageSize;
+          setArticles(data.slice(start, start + pageSize));
+        } else {
+          if (cancelled) return;
+          setArticles([]);
+          setTotalCount(0);
+        }
       } catch (e) {
         console.error('Failed to load articles', e);
       } finally {
@@ -53,7 +80,11 @@ export default function EditorListPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [page, pageSize]);
+
+  const totalPages = totalCount ? Math.max(1, Math.ceil(totalCount / pageSize)) : 1;
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,13 +100,25 @@ export default function EditorListPage() {
       <main className="p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Articles</h2>
-          <Link
-            href="/dashboard/editor/new"
-            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition no-underline"
-            style={{ color: 'var(--white)', textDecoration: 'none' }}
-          >
-            Add Article
-          </Link>
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-600 flex items-center gap-2">
+              Per page
+              <select
+                className="border rounded px-2 py-1"
+                value={pageSize}
+                onChange={(e) => { setPage(1); setPageSize(parseInt(e.target.value)); }}
+              >
+                {[5,10,15].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </label>
+            <Link
+              href="/dashboard/editor/new"
+              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary transition no-underline"
+              style={{ color: 'var(--white)', textDecoration: 'none' }}
+            >
+              Add Article
+            </Link>
+          </div>
         </div>
         {loading ? <div>Loading…</div> : (
           <div className="overflow-x-auto rounded-xl shadow border bg-white">
@@ -147,6 +190,35 @@ export default function EditorListPage() {
             </table>
           </div>
         )}
+
+        {/* Pagination controls */}
+        {!loading && (
+          <div className="flex items-center justify-between mt-3">
+            <div className="text-sm text-gray-600">
+              Page <span className="font-semibold">{page}</span>{totalPages ? <> of <span className="font-semibold">{totalPages}</span></> : null}
+              {typeof totalCount === 'number' ? <span className="ml-2 text-gray-400">({totalCount} total)</span> : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className={`px-3 py-1.5 rounded border ${canPrev ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400'} `}
+                onClick={() => canPrev && setPage(p => Math.max(1, p - 1))}
+                disabled={!canPrev}
+              >
+                Prev
+              </button>
+              <button
+                className={`px-3 py-1.5 rounded border ${canNext ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400'} `}
+                onClick={() => canNext && setPage(p => p + 1)}
+                disabled={!canNext}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics section */}
+        <Analytics defaultDays={30} defaultLimit={5} />
       </main>
     </div>
   );

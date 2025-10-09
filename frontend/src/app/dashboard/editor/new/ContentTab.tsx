@@ -74,17 +74,41 @@ const ContentTab: React.FC<ContentTabProps> = ({ formData, setFormData, handleCh
         </div>
         {/* Summary */}
         <div>
-          <label className="block text-base font-semibold mb-1 text-gray-700">Summary *</label>
+          <div className="flex items-baseline justify-between mb-1">
+            <label className="block text-base font-semibold text-gray-700">Summary *</label>
+            <span
+              className={
+                "text-xs font-medium " +
+                ((formData.summary?.length || 0) > 300 ? "text-red-600" : "text-gray-500")
+              }
+              aria-live="polite"
+            >
+              {(formData.summary?.length || 0)}/300
+            </span>
+          </div>
           <textarea
+            id="summary-input"
             name="summary"
             value={formData.summary}
             onChange={handleChange}
-            className="w-full border border-gray-200 px-4 py-3 rounded-lg bg-white/80 focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition placeholder-gray-400"
+            className={
+              "w-full px-4 py-3 rounded-lg bg-white/80 focus:ring-2 transition placeholder-gray-400 " +
+              ((formData.summary?.length || 0) > 300
+                ? "border border-red-300 focus:ring-red-200 focus:border-red-400"
+                : "border border-gray-200 focus:ring-primary/20 focus:border-primary/40")
+            }
             rows={3}
             required
+            aria-invalid={(formData.summary?.length || 0) > 300}
             placeholder="Brief summary of the article..."
           />
-          <span className="text-xs text-gray-400">This appears in article previews and search results.</span>
+          <div className="mt-1">
+            {(formData.summary?.length || 0) > 300 ? (
+              <span className="text-xs text-red-600">Summaries must be 300 characters or fewer.</span>
+            ) : (
+              <span className="text-xs text-gray-400">This appears in article previews and search results.</span>
+            )}
+          </div>
         </div>
       </div>
       <div className="border-t border-dashed border-gray-200/70 my-8" />
