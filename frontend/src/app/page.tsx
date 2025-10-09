@@ -8,19 +8,11 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import api from '../lib/api'; // <-- use the axios client
 import { fixMediaUrl } from '@/lib/media';
+import { fetchArticlesList, fetchBreakingList } from '@/services/articles';
+import BreakingBar from '@/components/BreakingBar';
+import type { ArticleListItem } from '@/types/home';
 
-interface Article {
-  id: number;
-  title: string;
-  summary: string;
-  category: string;
-  is_breaking_news: boolean;
-  author: any; // API returns string in list; keep flexible
-  published_date: string;
-  slug: string;
-  featured_image?: string;
-  featured_image_data?: { url: string };
-}
+type Article = ArticleListItem;
 
 // (Optional) If Django returns relative media paths like "/media/…"
 // set NEXT_PUBLIC_MEDIA_ORIGIN (e.g. http://localhost:8000) or ignore this if your API already returns absolute URLs.
@@ -40,7 +32,7 @@ const ArticleCard = ({ article }: { article: Article }) => {
         <div className="aspect-video bg-gray-200 mb-4 overflow-hidden rounded-lg">
           {article.featured_image || article.featured_image_data?.url ? (
             <img
-              src={abs(article.featured_image_data?.url || article.featured_image)}
+              src={abs((article.featured_image_data?.url ?? article.featured_image) || undefined)}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -169,12 +161,10 @@ export default function Home() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const [articlesRes, breakingRes] = await Promise.all([
-          api.get('articles/'),
-          api.get('articles/breaking/').catch(() => ({ data: { results: [] } }))
+        const [articlesList, breakingServer] = await Promise.all([
+          fetchArticlesList(),
+          fetchBreakingList().catch(() => [])
         ]);
-        const listData = articlesRes.data;
-        const articlesList: Article[] = Array.isArray(listData) ? listData : (listData.results ?? []);
         // Ensure only published and sort by most recent publish date
         const published = articlesList.filter(a => (a as any).is_published !== false);
         const sorted = published.sort((a, b) => {
@@ -185,8 +175,7 @@ export default function Home() {
         setArticles(sorted);
 
         // Use server-provided breaking when available, else fallback to client-side 12h window
-        const breakingPayload = breakingRes.data;
-        let breaking: Article[] = Array.isArray(breakingPayload) ? breakingPayload : (breakingPayload.results ?? []);
+        let breaking: Article[] = breakingServer as Article[];
         if (!breaking || breaking.length === 0) {
           const twelveHoursMs = 12 * 60 * 60 * 1000;
           const now = Date.now();
@@ -238,7 +227,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <BreakingNewsBanner breakingNews={breakingNews} />
+  <BreakingBar items={breakingNews} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <div className="lg:col-span-2">
             <FeaturedArticle article={featuredArticle} />
