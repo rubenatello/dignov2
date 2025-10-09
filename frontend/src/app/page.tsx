@@ -76,14 +76,20 @@ const ArticleCard = ({ article }: { article: Article }) => {
 
 const BreakingNewsBanner = ({ breakingNews }: { breakingNews: Article[] }) => (
   breakingNews.length > 0 ? (
-    <Link href={`/articles/${breakingNews[0].slug}`} className="block">
-      <div className="bg-red-600 text-white px-4 py-2 mb-8 rounded">
-        <div className="flex items-center">
-          <span className="font-bold text-sm mr-3">BREAKING</span>
-          <span className="text-sm underline-offset-2 group-hover:underline">{breakingNews[0].title}</span>
-        </div>
+    <div className="bg-red-600 text-white px-4 py-2 mb-8 rounded">
+      <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap">
+        <span className="font-bold text-xs md:text-sm tracking-wide">BREAKING</span>
+        <ul className="flex items-center gap-6">
+          {breakingNews.slice(0,5).map(item => (
+            <li key={item.id} className="text-xs md:text-sm">
+              <Link href={`/articles/${item.slug}`} className="hover:underline">
+                {item.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
-    </Link>
+    </div>
   ) : null
 );
 
@@ -163,8 +169,12 @@ export default function Home() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const { data } = await api.get('articles/');
-        const articlesList: Article[] = Array.isArray(data) ? data : (data.results ?? []);
+        const [articlesRes, breakingRes] = await Promise.all([
+          api.get('articles/'),
+          api.get('articles/breaking/').catch(() => ({ data: { results: [] } }))
+        ]);
+        const listData = articlesRes.data;
+        const articlesList: Article[] = Array.isArray(listData) ? listData : (listData.results ?? []);
         // Ensure only published and sort by most recent publish date
         const published = articlesList.filter(a => (a as any).is_published !== false);
         const sorted = published.sort((a, b) => {
@@ -173,7 +183,16 @@ export default function Home() {
           return db - da;
         });
         setArticles(sorted);
-        setBreakingNews(sorted.filter(a => a.is_breaking_news));
+
+        // Use server-provided breaking when available, else fallback to client-side 12h window
+        const breakingPayload = breakingRes.data;
+        let breaking: Article[] = Array.isArray(breakingPayload) ? breakingPayload : (breakingPayload.results ?? []);
+        if (!breaking || breaking.length === 0) {
+          const twelveHoursMs = 12 * 60 * 60 * 1000;
+          const now = Date.now();
+          breaking = sorted.filter(a => a.is_breaking_news && a.published_date && (now - new Date(a.published_date).getTime()) <= twelveHoursMs).slice(0,5);
+        }
+        setBreakingNews(breaking);
       } catch (err) {
         console.error('Error fetching articles:', err);
         setError('Failed to load articles');

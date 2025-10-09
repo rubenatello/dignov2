@@ -146,8 +146,23 @@ class ArticleViewSet(viewsets.ModelViewSet):
         featured_articles = self.get_queryset().filter(
             published_date__gte=thirty_days_ago
         ).order_by('-view_count')[:5]
-        
-        serializer = ArticleListSerializer(featured_articles, many=True)
+        serializer = ArticleListSerializer(featured_articles, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def breaking(self, request):
+        """Get up to 5 currently-breaking articles.
+
+        Definition: is_breaking_news=True AND published_date within the last 12 hours.
+        """
+        from django.utils import timezone
+        from datetime import timedelta
+        twelve_hours_ago = timezone.now() - timedelta(hours=12)
+        qs = self.get_queryset().filter(
+            is_breaking_news=True,
+            published_date__gte=twelve_hours_ago
+        ).order_by('-published_date')[:5]
+        serializer = ArticleListSerializer(qs, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
