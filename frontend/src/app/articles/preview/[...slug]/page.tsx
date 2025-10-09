@@ -97,7 +97,7 @@ export default function ArticlePreviewPage() {
                 )}
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-1">{article.title}</h1>
                 {article.subtitle && (
-                  <h2 className="text-xl md:text-2xl font-medium text-slate-800 mb-3">{article.subtitle}</h2>
+                  <h2 className="text-base md:text-lg font-normal text-slate-700 mb-4">{article.subtitle}</h2>
                 )}
                 {(() => {
                   const data = (article as any).featured_image_data;
