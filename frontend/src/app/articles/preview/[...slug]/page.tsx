@@ -100,10 +100,16 @@ export default function ArticlePreviewPage() {
                   <h2 className="text-xl md:text-2xl font-medium text-slate-800 mb-3">{article.subtitle}</h2>
                 )}
                 {(() => {
-                  const imgSrc = fixMediaUrl((article as any).featured_image_data?.url || article.featured_image || '');
+                  const data = (article as any).featured_image_data;
+                  const imgSrc = fixMediaUrl(data?.url || article.featured_image || '');
                   return imgSrc ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imgSrc} alt={article.title} className="w-full rounded-lg mb-6" />
+                    <figure className="mb-6">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imgSrc} alt={article.title} className="w-full rounded-lg" />
+                      {data?.caption && (
+                        <figcaption className="text-xs text-slate-500 mt-2 text-center">{data.caption}</figcaption>
+                      )}
+                    </figure>
                   ) : null;
                 })()}
                 {article.summary && (
@@ -140,7 +146,7 @@ export default function ArticlePreviewPage() {
                   })()}
                 </div>
                 {article.content && (
-                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: fixHtmlMediaUrls(article.content) }} />
+                  <div className="prose rte-content max-w-none" dangerouslySetInnerHTML={{ __html: fixHtmlMediaUrls(article.content) }} />
                 )}
                 <div className="mt-6 text-sm text-slate-500 flex flex-wrap gap-3">
                   <span className="uppercase tracking-wide text-slate-600">Category:</span>

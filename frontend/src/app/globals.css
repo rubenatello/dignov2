@@ -85,3 +85,51 @@ footer a:hover {
   color: var(--secondary);
   line-height: 1.2;
 }
+
+/* Rich text content image styles (centered and responsive) */
+.prose img,
+.rte-content img,
+figure.rte-img img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+figure.rte-img {
+  position: relative;
+  margin: 1rem auto;
+  text-align: center;
+}
+
+figcaption.rte-caption {
+  font-size: 0.8rem;
+  color: #6b7280; /* slate-500 */
+  margin-top: 0.35rem;
+}
+
+figure.rte-img.selected {
+  outline: 2px solid #93c5fd; /* tailwind blue-300 */
+  outline-offset: 2px;
+}
+
+/* Bottom-right resize handle */
+.rte-resize-handle {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  width: 14px;
+  height: 14px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
+  cursor: se-resize;
+}
+
+/* Keep CKEditor/HTML content images fluid on mobile */
+@media (max-width: 640px) {
+  .prose img,
+  .rte-content img,
+  figure.rte-img img {
+    width: 100% !important;
+  }
+}
