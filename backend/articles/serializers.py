@@ -1,15 +1,22 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Article, Image, Tag
+from .models import Article, Image, Tag, Comment
 
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
+    groups = serializers.SerializerMethodField()
     
+    def get_groups(self, obj):
+        try:
+            return list(obj.groups.values_list('name', flat=True))
+        except Exception:
+            return []
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'bio', 'is_staff']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'bio', 'is_staff', 'groups']
 
 class ImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -41,6 +48,8 @@ class ArticleListSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
     tags_list = serializers.ReadOnlyField()
     featured_image_data = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
     
     def get_author(self, obj):
         if obj.author:
@@ -57,18 +66,28 @@ class ArticleListSerializer(serializers.ModelSerializer):
                 'caption': obj.get_featured_image_caption()
             }
         return None
+
+    def get_like_count(self, obj):
+        return getattr(obj, 'likes', None).count() if hasattr(obj, 'likes') else obj.likes.count() if hasattr(obj, 'likes') else 0
+
+    def get_comment_count(self, obj):
+        return getattr(obj, 'comments', None).count() if hasattr(obj, 'comments') else obj.comments.count() if hasattr(obj, 'comments') else 0
     
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'slug', 'summary', 'author', 'featured_image_data',
-            'published_date', 'last_published_update', 'scheduled_publish_time', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news', 'is_published'
+            'published_date', 'last_published_update', 'scheduled_publish_time', 'view_count', 'tags_list', 'meta_description', 'category', 'is_breaking_news', 'is_published',
+            'like_count', 'comment_count'
         ]
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags_list = serializers.ReadOnlyField()
     featured_image_data = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+    liked_by_me = serializers.SerializerMethodField()
     # include raw fields needed by the editor form
     featured_image = serializers.ImageField(read_only=True)
     featured_image_asset = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -84,6 +103,19 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
                 'caption': obj.get_featured_image_caption()
             }
         return None
+
+    def get_like_count(self, obj):
+        return obj.likes.count()
+
+    def get_comment_count(self, obj):
+        return obj.comments.count()
+
+    def get_liked_by_me(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        return obj.likes.filter(user=user).exists()
     
     class Meta:
         model = Article
@@ -93,8 +125,17 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'category', 'is_breaking_news', 'is_published',
             'featured_image', 'featured_image_asset', 'featured_image_data',
             'published_date', 'last_published_update', 'scheduled_publish_time', 'created_date', 'updated_date',
-            'view_count', 'tags_list', 'meta_description'
+            'view_count', 'tags_list', 'meta_description', 'like_count', 'comment_count', 'liked_by_me'
         ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'article', 'user', 'content', 'created_date', 'updated_date']
+        read_only_fields = ['id', 'article', 'user', 'created_date', 'updated_date']
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
     # Accept tags as simple string list on write; don't include in auto representation to avoid

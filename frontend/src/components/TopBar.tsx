@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function TopBar() {
   const [formatted, setFormatted] = useState<string | null>(null);
@@ -30,12 +31,12 @@ export default function TopBar() {
             <span className="text-accent">{formatted ? formatted : ''}</span>
           </div>
           <div className="flex space-x-4">
-            <button className="bg-cta text-white px-4 py-1 rounded text-sm font-medium hover:bg-cta-darken">
+            <Link href="/subscribe" className="bg-cta text-white px-4 py-1 rounded text-sm font-medium hover:bg-cta-darken">
               SUBSCRIBE
-            </button>
-            <button className="bg-accent px-4 py-1 rounded text-primary hover:bg-gray-200 font-medium">
+            </Link>
+            <Link href="/login" className="bg-accent px-4 py-1 rounded text-primary hover:bg-gray-200 font-medium">
               LOG IN
-            </button>
+            </Link>
           </div>
         </div>
       </div>

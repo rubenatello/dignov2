@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as django_login, logout as django_logout
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer, LoginSerializer, RegisterSerializer
 
 User = get_user_model()
 
@@ -66,8 +66,16 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
     
     def post(self, request):
-        # For now, only allow admin to create users
-        return Response({'error': 'Registration not available'}, status=status.HTTP_403_FORBIDDEN)
+        serializer = RegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.save()
+        # Issue token for immediate login
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_201_CREATED)
 class CsrfTokenView(APIView):
     """CSRF token endpoint for frontend"""
     permission_classes = [permissions.AllowAny]

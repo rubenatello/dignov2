@@ -29,15 +29,15 @@ export default function MobileMenu({ isOpen, onItemClick }: MobileMenuProps) {
             <SearchBar onClose={onItemClick} />
           </div>
         </div>
-        <button className="bg-cta text-white px-4 py-2 rounded text-sm font-semibold flex-1 mx-2">SUBSCRIBE</button>
-        <button className="text-gray-700 hover:text-black font-medium px-4 py-2 rounded text-sm flex-1 mx-2">LOG IN</button>
+  <Link href="/subscribe" className="bg-cta text-white px-4 py-2 rounded text-sm font-semibold flex-1 mx-2 text-center">SUBSCRIBE</Link>
+  <Link href="/login" className="text-gray-700 hover:text-black font-medium px-4 py-2 rounded text-sm flex-1 mx-2 text-center">LOG IN</Link>
       </div>
       {/* Menu Items */}
       <div className="px-4 py-2 space-y-1">
         {menuItems.map((item) => (
           <Link 
             key={item}
-            href={`/${item.toLowerCase().replace(/\s+/g, '-')}`}
+            href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`}
             className="block py-3 text-sm font-medium text-gray-800 hover:text-blue-500 border-b border-gray-100"
             onClick={onItemClick}
           >

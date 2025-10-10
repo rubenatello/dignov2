@@ -37,7 +37,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               {menuItems.slice(0, 4).map((item) => (
                 <li key={item}>
-                  <Link href={`/${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">
+                  <Link href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">
                     {item}
                   </Link>
                 </li>
@@ -50,7 +50,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               {menuItems.slice(4).map((item) => (
                 <li key={item}>
-                  <Link href={`/${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">
+                  <Link href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">
                     {item}
                   </Link>
                 </li>
@@ -61,7 +61,7 @@ export default function Footer() {
           <div>
             <h3 className="font-bold mb-4 text-cta">Support</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="#" className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">Subscribe</Link></li>
+              <li><Link href="/subscribe" className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">Subscribe</Link></li>
               <li><Link href="#" className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">Donate</Link></li>
               <li><Link href="#" className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">Contact</Link></li>
               <li><Link href="/about" className="text-[color:#f8fbff] hover:text-white hover:font-bold transition-colors uppercase">About</Link></li>

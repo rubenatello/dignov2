@@ -190,3 +190,39 @@ class Article(models.Model):
         self.view_count += 1
         self.save(update_fields=['view_count'])
 
+
+class ArticleLike(models.Model):
+    """A user's like on an article (one like per user/article)."""
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='article_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('article', 'user')
+        indexes = [
+            models.Index(fields=['article', 'user']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"Like({self.user_id} -> {self.article_id})"
+
+
+class Comment(models.Model):
+    """A comment on an article by a user."""
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
+    content = models.TextField(max_length=2000)
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_date']
+        indexes = [
+            models.Index(fields=['article', '-created_date']),
+            models.Index(fields=['user', '-created_date']),
+        ]
+
+    def __str__(self):
+        return f"Comment({self.user_id} on {self.article_id})"
+

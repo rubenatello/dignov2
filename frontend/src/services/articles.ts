@@ -28,3 +28,13 @@ export async function fetchBreakingList(): Promise<ArticleListItem[]> {
   const list: ArticleListItem[] = Array.isArray(data) ? data : (data.results ?? []);
   return list;
 }
+
+// Fetch articles by category (backend expects enum value, e.g., "POLITICS"). Supports server pagination.
+export async function fetchArticlesByCategory(category: string, page: number = 1): Promise<{ list: ArticleListItem[]; count: number; next?: string | null; previous?: string | null; }>{
+  const { data } = await api.get('articles/', { params: { category, page } });
+  const list: ArticleListItem[] = Array.isArray(data) ? data : (data.results ?? []);
+  const count: number = typeof data?.count === 'number' ? data.count : list.length;
+  const next = data?.next ?? null;
+  const previous = data?.previous ?? null;
+  return { list, count, next, previous };
+}

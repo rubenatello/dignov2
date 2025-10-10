@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { fixMediaUrl, fixHtmlMediaUrls } from '@/lib/media';
+import LikeCommentPanel from '@/components/LikeCommentPanel';
 
 type Article = {
   id: number;
@@ -23,6 +24,9 @@ type Article = {
   last_published_update?: string | null;
   author?: any;
   co_author?: any;
+  like_count?: number;
+  comment_count?: number;
+  liked_by_me?: boolean;
 };
 
 export default function ArticleLivePage() {
@@ -153,6 +157,14 @@ export default function ArticleLivePage() {
                     </>
                   )}
                 </div>
+
+                {/* Engagement */}
+                <LikeCommentPanel
+                  slug={article.slug}
+                  likedByMe={article.liked_by_me}
+                  likeCount={article.like_count}
+                  commentCount={article.comment_count}
+                />
               </article>
 
               {/* Sidebar feed */}

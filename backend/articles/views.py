@@ -5,8 +5,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import Article
-from .models import Article, Image
-from .serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer, ImageSerializer
+from .models import Article, Image, ArticleLike, Comment
+from .serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer, ImageSerializer, CommentSerializer
 from .permissions import IsWriterOrEditorOrReadOnly
 
 class ImageViewSet(viewsets.ModelViewSet):
@@ -123,6 +123,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
                 Q(author__first_name__icontains=search_query) |
                 Q(author__last_name__icontains=search_query)
             )
+        # Filter by category if provided
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
         # Filter by tags if provided
         tags = self.request.query_params.get('tags', None)
         if tags:
@@ -135,6 +139,38 @@ class ArticleViewSet(viewsets.ModelViewSet):
         instance.increment_view_count()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated])
+    def like(self, request, slug=None):
+        """POST: like, DELETE: unlike. Idempotent."""
+        article = self.get_object()
+        if request.method.lower() == 'post':
+            ArticleLike.objects.get_or_create(article=article, user=request.user)
+            return Response({ 'liked': True })
+        # DELETE
+        ArticleLike.objects.filter(article=article, user=request.user).delete()
+        return Response({ 'liked': False })
+
+    @action(detail=True, methods=['get', 'post'], url_path='comments', permission_classes=[permissions.IsAuthenticatedOrReadOnly])
+    def comments(self, request, slug=None):
+        """GET: list comments; POST: create comment (auth required)."""
+        article = self.get_object()
+        if request.method.lower() == 'get':
+            qs = Comment.objects.filter(article=article).select_related('user')
+            page = self.paginate_queryset(qs)
+            serializer = CommentSerializer(page or qs, many=True, context={'request': request})
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
+            return Response(serializer.data)
+        # POST
+        if not request.user.is_authenticated:
+            return Response({'detail': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        content = request.data.get('content', '').strip()
+        if not content:
+            return Response({'content': 'This field may not be blank.'}, status=status.HTTP_400_BAD_REQUEST)
+        comment = Comment.objects.create(article=article, user=request.user, content=content)
+        serializer = CommentSerializer(comment, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     @action(detail=False, methods=['get'])
     def featured(self, request):
