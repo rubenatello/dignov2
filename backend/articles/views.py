@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import Article
-from .models import Article, Image, ArticleLike, Comment
+from .models import Article, Image, ArticleLike, Comment, CommentLike
 from .serializers import ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer, ImageSerializer, CommentSerializer
 from .permissions import IsWriterOrEditorOrReadOnly
 
@@ -153,24 +153,79 @@ class ArticleViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get', 'post'], url_path='comments', permission_classes=[permissions.IsAuthenticatedOrReadOnly])
     def comments(self, request, slug=None):
-        """GET: list comments; POST: create comment (auth required)."""
+        """GET: list top-level comments; POST: create top-level comment (auth required).
+
+        Optional query param include_replies=true to include replies inline (small threads).
+        """
         article = self.get_object()
         if request.method.lower() == 'get':
-            qs = Comment.objects.filter(article=article).select_related('user')
+            include_replies = request.query_params.get('include_replies', 'false').lower() in ('1', 'true', 'yes')
+            qs = Comment.objects.filter(article=article, parent__isnull=True).select_related('user')
             page = self.paginate_queryset(qs)
-            serializer = CommentSerializer(page or qs, many=True, context={'request': request})
+            data_qs = page or qs
+            serializer = CommentSerializer(data_qs, many=True, context={'request': request})
+            data = serializer.data
+            if include_replies:
+                # Attach replies (flat, ordered newest->oldest) per parent comment
+                ids = [c.id for c in data_qs]
+                replies = (
+                    Comment.objects.filter(article=article, parent_id__in=ids)
+                    .select_related('user')
+                    .order_by('-created_date')
+                )
+                rep_by_parent = {}
+                for r in replies:
+                    rep_by_parent.setdefault(r.parent_id, []).append(CommentSerializer(r, context={'request': request}).data)
+                # merge
+                for item in data:
+                    item['replies'] = rep_by_parent.get(item['id'], [])
             if page is not None:
-                return self.get_paginated_response(serializer.data)
-            return Response(serializer.data)
-        # POST
+                return self.get_paginated_response(data)
+            return Response(data)
+        # POST (top-level)
         if not request.user.is_authenticated:
             return Response({'detail': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-        content = request.data.get('content', '').strip()
+        content = (request.data.get('content') or '').strip()
         if not content:
             return Response({'content': 'This field may not be blank.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(content) > 300:
+            return Response({'content': 'Ensure this field has no more than 300 characters.'}, status=status.HTTP_400_BAD_REQUEST)
         comment = Comment.objects.create(article=article, user=request.user, content=content)
         serializer = CommentSerializer(comment, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='comments/(?P<comment_id>[^/.]+)/reply', permission_classes=[permissions.IsAuthenticated])
+    def reply(self, request, slug=None, comment_id=None):
+        """Create a reply to a specific comment."""
+        article = self.get_object()
+        try:
+            parent = Comment.objects.get(id=comment_id, article=article)
+        except Comment.DoesNotExist:
+            return Response({'detail': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        content = (request.data.get('content') or '').strip()
+        if not content:
+            return Response({'content': 'This field may not be blank.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(content) > 300:
+            return Response({'content': 'Ensure this field has no more than 300 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+        c = Comment.objects.create(article=article, user=request.user, parent=parent, content=content)
+        return Response(CommentSerializer(c, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='comments/(?P<comment_id>[^/.]+)/like', permission_classes=[permissions.IsAuthenticated])
+    def comment_like(self, request, slug=None, comment_id=None):
+        """POST: like a comment; DELETE: unlike.
+
+        Idempotent operations.
+        """
+        article = self.get_object()  # ensure article exists and user can access
+        try:
+            comment = Comment.objects.get(id=comment_id, article=article)
+        except Comment.DoesNotExist:
+            return Response({'detail': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+        if request.method.lower() == 'post':
+            CommentLike.objects.get_or_create(comment=comment, user=request.user)
+            return Response({'liked': True})
+        CommentLike.objects.filter(comment=comment, user=request.user).delete()
+        return Response({'liked': False})
     
     @action(detail=False, methods=['get'])
     def featured(self, request):

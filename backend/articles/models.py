@@ -212,10 +212,10 @@ class Comment(models.Model):
     """A comment on an article by a user."""
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
-    content = models.TextField(max_length=2000)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    content = models.TextField(max_length=300)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-
     class Meta:
         ordering = ['-created_date']
         indexes = [
@@ -225,4 +225,21 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment({self.user_id} on {self.article_id})"
+
+
+class CommentLike(models.Model):
+    """A user's like on a comment (one like per user/comment)."""
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comment_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('comment', 'user')
+        indexes = [
+            models.Index(fields=['comment', 'user']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"CommentLike({self.user_id} -> {self.comment_id})"
 

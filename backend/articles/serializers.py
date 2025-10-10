@@ -131,11 +131,28 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    parent = serializers.PrimaryKeyRelatedField(read_only=True)
+    reply_count = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    liked_by_me = serializers.SerializerMethodField()
+
+    def get_reply_count(self, obj):
+        return getattr(obj, 'replies', None).count() if hasattr(obj, 'replies') else obj.replies.count()
+
+    def get_like_count(self, obj):
+        return getattr(obj, 'likes', None).count() if hasattr(obj, 'likes') else obj.likes.count()
+
+    def get_liked_by_me(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        return obj.likes.filter(user=user).exists()
 
     class Meta:
         model = Comment
-        fields = ['id', 'article', 'user', 'content', 'created_date', 'updated_date']
-        read_only_fields = ['id', 'article', 'user', 'created_date', 'updated_date']
+        fields = ['id', 'article', 'user', 'parent', 'content', 'created_date', 'updated_date', 'reply_count', 'like_count', 'liked_by_me']
+        read_only_fields = ['id', 'article', 'user', 'parent', 'created_date', 'updated_date', 'reply_count', 'like_count', 'liked_by_me']
 
 class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
     # Accept tags as simple string list on write; don't include in auto representation to avoid
