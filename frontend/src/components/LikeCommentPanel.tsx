@@ -29,6 +29,8 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
   const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({});
   const [replySubmitting, setReplySubmitting] = useState<Record<number, boolean>>({});
   const [replyOpen, setReplyOpen] = useState<Record<number, boolean>>({});
+  const [expandedReplies, setExpandedReplies] = useState<Record<number, boolean>>({});
+  const [toast, setToast] = useState<string>("");
   const totalComments = useMemo(() => commentCount ?? comments.length ?? 0, [commentCount, comments.length]);
 
   const timeAgo = (iso: string) => {
@@ -47,6 +49,36 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
     } catch {
       return new Date(iso).toLocaleString();
     }
+  };
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast("") , 3000);
+  };
+
+  const InitialsAvatar = ({ name }: { name: string }) => {
+    const initials = useMemo(() => {
+      const p = (name || "?").trim().split(/\s+/);
+      const a = (p[0]?.[0] || "").toUpperCase();
+      const b = (p[1]?.[0] || "").toUpperCase();
+      return (a + b) || a || "?";
+    }, [name]);
+    const hue = useMemo(() => {
+      const s = name || "user";
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+      return h;
+    }, [name]);
+    return (
+      <span
+        aria-hidden
+        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-semibold text-white"
+        style={{ backgroundColor: `hsl(${hue} 70% 45%)` }}
+        title={name}
+      >
+        {initials}
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -78,7 +110,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
         setLikes((n) => Math.max(0, n - 1));
       }
     } catch (e) {
-      // noop
+      showToast("Failed to update like. Please try again.");
     }
   };
 
@@ -92,7 +124,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
       setComments((prev) => [data, ...prev]);
       setNewComment("");
     } catch (e) {
-      // noop
+      showToast("Failed to post comment.");
     } finally {
       setSubmitting(false);
     }
@@ -136,7 +168,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
       try {
         const { data } = await api.get(`/articles/${slug}/comments/?include_replies=true`);
         setComments(Array.isArray(data) ? data : data.results ?? []);
-      } catch {}
+      } catch { showToast("Failed to update like."); }
     }
   };
 
@@ -160,13 +192,14 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
       setReplyDrafts((m) => ({ ...m, [parentId]: "" }));
       setReplyOpen((m) => ({ ...m, [parentId]: false }));
     } catch {
-      // noop
+      showToast("Failed to post reply.");
     } finally {
       setReplySubmitting((m) => ({ ...m, [parentId]: false }));
     }
   };
 
   return (
+    <>
     <section className="mt-10 border-t border-gray-200 pt-6">
       <div className="flex items-center gap-4 mb-4">
         <button
@@ -213,6 +246,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
             {comments.map((c) => (
               <li key={c.id} className="border-b pb-4">
                 <div className="text-sm text-gray-800 font-medium flex items-center gap-2">
+                  <InitialsAvatar name={c.user.full_name || c.user.username} />
                   <span>{c.user.full_name || c.user.username}</span>
                   {(c.user.is_staff || (c.user.groups || []).includes('Editor') || (c.user.groups || []).includes('Staff')) && (
                     <span title="Staff" className="text-[10px] font-semibold bg-gray-800 text-white px-2 py-0.5 rounded-full">STAFF</span>
@@ -229,6 +263,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                     disabled={!isAuthenticated}
                     className="inline-flex items-center gap-1 text-gray-700 hover:text-red-600 disabled:opacity-50"
                     aria-pressed={!!c.liked_by_me}
+                    aria-label={c.liked_by_me ? 'Unlike comment' : 'Like comment'}
                   >
                     {c.liked_by_me ? (
                       <HeartSolid className="h-4 w-4 text-red-600" />
@@ -241,6 +276,8 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                     <button
                       onClick={() => setReplyOpen((m) => ({ ...m, [c.id]: !m[c.id] }))}
                       className="text-gray-700 hover:underline"
+                      aria-expanded={!!replyOpen[c.id]}
+                      aria-controls={`reply-box-${c.id}`}
                     >
                       Reply
                     </button>
@@ -248,7 +285,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                 </div>
 
                 {isAuthenticated && replyOpen[c.id] && (
-                  <div className="mt-2 flex items-start gap-2">
+                  <div id={`reply-box-${c.id}`} className="mt-2 flex items-start gap-2">
                     <textarea
                       value={replyDrafts[c.id] || ''}
                       onChange={(e) => setReplyText(c.id, e.target.value)}
@@ -277,9 +314,10 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
 
                 {Array.isArray(c.replies) && c.replies.length > 0 && (
                   <ul className="mt-3 space-y-3 pl-3 border-l border-gray-200">
-                    {c.replies.map((r) => (
+                    {(expandedReplies[c.id] ? c.replies : c.replies.slice(0, 2)).map((r) => (
                       <li key={r.id} className="">
                         <div className="text-xs text-gray-800 font-medium flex items-center gap-2">
+                          <InitialsAvatar name={r.user.full_name || r.user.username} />
                           <span>{r.user.full_name || r.user.username}</span>
                           {(r.user.is_staff || (r.user.groups || []).includes('Editor') || (r.user.groups || []).includes('Staff')) && (
                             <span title="Staff" className="text-[9px] font-semibold bg-gray-800 text-white px-1.5 py-0.5 rounded-full">STAFF</span>
@@ -296,6 +334,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                             disabled={!isAuthenticated}
                             className="inline-flex items-center gap-1 text-gray-700 hover:text-red-600 disabled:opacity-50"
                             aria-pressed={!!r.liked_by_me}
+                            aria-label={r.liked_by_me ? 'Unlike reply' : 'Like reply'}
                           >
                             {r.liked_by_me ? (
                               <HeartSolid className="h-4 w-4 text-red-600" />
@@ -307,6 +346,16 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                         </div>
                       </li>
                     ))}
+                    {c.replies.length > 2 && (
+                      <li>
+                        <button
+                          className="text-xs text-gray-600 hover:text-gray-800 underline"
+                          onClick={() => setExpandedReplies((m) => ({ ...m, [c.id]: !m[c.id] }))}
+                        >
+                          {expandedReplies[c.id] ? 'Hide replies' : `Show ${c.replies.length - 2} more`}
+                        </button>
+                      </li>
+                    )}
                   </ul>
                 )}
               </li>
@@ -315,5 +364,11 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
         )}
       </div>
     </section>
+    {toast && (
+      <div className="fixed bottom-4 left-4 bg-gray-900 text-white text-xs px-3 py-2 rounded shadow-lg">
+        {toast}
+      </div>
+    )}
+    </>
   );
 }
