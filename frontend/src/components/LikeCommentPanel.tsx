@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -26,7 +28,26 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
   const [submitting, setSubmitting] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({});
   const [replySubmitting, setReplySubmitting] = useState<Record<number, boolean>>({});
+  const [replyOpen, setReplyOpen] = useState<Record<number, boolean>>({});
   const totalComments = useMemo(() => commentCount ?? comments.length ?? 0, [commentCount, comments.length]);
+
+  const timeAgo = (iso: string) => {
+    try {
+      const d = new Date(iso).getTime();
+      const diff = Math.max(0, Date.now() - d);
+      const sec = Math.floor(diff / 1000);
+      if (sec < 60) return `${sec}s ago`;
+      const min = Math.floor(sec / 60);
+      if (min < 60) return `${min}m ago`;
+      const hr = Math.floor(min / 60);
+      if (hr < 24) return `${hr}h ago`;
+      const day = Math.floor(hr / 24);
+      if (day < 7) return `${day}d ago`;
+      return new Date(iso).toLocaleDateString();
+    } catch {
+      return new Date(iso).toLocaleString();
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -79,13 +100,33 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
 
   const toggleCommentLike = async (commentId: number) => {
     try {
+      // Determine current liked state before optimistic update
+      let currentlyLiked = false;
+      for (const c of comments) {
+        if (c.id === commentId) { currentlyLiked = !!c.liked_by_me; break; }
+        if (c.replies) {
+          const r = c.replies.find((x) => x.id === commentId);
+          if (r) { currentlyLiked = !!r.liked_by_me; break; }
+        }
+      }
+      // Optimistic UI update (both top-level and replies)
       setComments((prev) => prev.map((c) => {
-        if (c.id !== commentId) return c;
-        const liked = !!c.liked_by_me;
-        return { ...c, liked_by_me: !liked, like_count: Math.max(0, (c.like_count || 0) + (liked ? -1 : 1)) };
+        if (c.id === commentId) {
+          const liked = !!c.liked_by_me;
+          return { ...c, liked_by_me: !liked, like_count: Math.max(0, (c.like_count || 0) + (liked ? -1 : 1)) };
+        }
+        if (Array.isArray(c.replies) && c.replies.length) {
+          const replies = c.replies.map((r) => {
+            if (r.id !== commentId) return r;
+            const liked = !!r.liked_by_me;
+            return { ...r, liked_by_me: !liked, like_count: Math.max(0, (r.like_count || 0) + (liked ? -1 : 1)) };
+          });
+          return { ...c, replies };
+        }
+        return c;
       }));
-      const target = comments.find((c) => c.id === commentId);
-      if (target?.liked_by_me) {
+      // Call API based on previous liked state
+      if (currentlyLiked) {
         await api.delete(`/articles/${slug}/comments/${commentId}/like/`);
       } else {
         await api.post(`/articles/${slug}/comments/${commentId}/like/`);
@@ -117,6 +158,7 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
         return { ...c, replies: [data, ...replies], reply_count: (c.reply_count || 0) + 1 };
       }));
       setReplyDrafts((m) => ({ ...m, [parentId]: "" }));
+      setReplyOpen((m) => ({ ...m, [parentId]: false }));
     } catch {
       // noop
     } finally {
@@ -179,42 +221,62 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                     <span title="Editor" className="text-[10px] font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full">EDITOR</span>
                   )}
                 </div>
-                <div className="text-xs text-gray-500">{new Date(c.created_date).toLocaleString()}</div>
+                <div className="text-xs text-gray-500">{timeAgo(c.created_date)}</div>
                 <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{c.content}</p>
-                <div className="mt-2 flex items-center gap-3">
+                <div className="mt-2 flex items-center gap-4 text-xs">
                   <button
                     onClick={() => toggleCommentLike(c.id)}
                     disabled={!isAuthenticated}
-                    className={`px-2 py-0.5 rounded border text-xs ${c.liked_by_me ? 'bg-red-50 border-red-300 text-red-700' : 'bg-white border-gray-300 text-gray-700'} disabled:opacity-50`}
+                    className="inline-flex items-center gap-1 text-gray-700 hover:text-red-600 disabled:opacity-50"
                     aria-pressed={!!c.liked_by_me}
                   >
-                    {c.liked_by_me ? '♥ Like' : '♡ Like'} ({c.like_count ?? 0})
+                    {c.liked_by_me ? (
+                      <HeartSolid className="h-4 w-4 text-red-600" />
+                    ) : (
+                      <HeartOutline className="h-4 w-4" />
+                    )}
+                    <span>{c.like_count ?? 0}</span>
                   </button>
                   {isAuthenticated && (
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <textarea
-                          value={replyDrafts[c.id] || ''}
-                          onChange={(e) => setReplyText(c.id, e.target.value)}
-                          placeholder="Write a reply"
-                          rows={1}
-                          className="min-w-0 flex-1 border rounded p-1 text-xs"
-                        />
-                        <button
-                          onClick={() => submitReply(c.id)}
-                          disabled={!!replySubmitting[c.id] || !(replyDrafts[c.id] || '').trim()}
-                          className="bg-gray-800 text-white text-xs px-2 py-1 rounded disabled:opacity-50 whitespace-nowrap"
-                        >
-                          {replySubmitting[c.id] ? 'Replying…' : 'Reply'}
-                        </button>
-                      </div>
-                      <div className="text-[10px] text-gray-500 mt-0.5">{(replyDrafts[c.id] || '').length}/300</div>
-                    </div>
+                    <button
+                      onClick={() => setReplyOpen((m) => ({ ...m, [c.id]: !m[c.id] }))}
+                      className="text-gray-700 hover:underline"
+                    >
+                      Reply
+                    </button>
                   )}
                 </div>
 
+                {isAuthenticated && replyOpen[c.id] && (
+                  <div className="mt-2 flex items-start gap-2">
+                    <textarea
+                      value={replyDrafts[c.id] || ''}
+                      onChange={(e) => setReplyText(c.id, e.target.value)}
+                      placeholder="Write a reply"
+                      rows={2}
+                      className="min-w-0 flex-1 border rounded p-2 text-xs"
+                    />
+                    <div className="flex flex-col items-end gap-1">
+                      <button
+                        onClick={() => submitReply(c.id)}
+                        disabled={!!replySubmitting[c.id] || !(replyDrafts[c.id] || '').trim()}
+                        className="bg-gray-800 text-white text-xs px-2 py-1 rounded disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {replySubmitting[c.id] ? 'Replying…' : 'Reply'}
+                      </button>
+                      <button
+                        onClick={() => { setReplyOpen((m) => ({ ...m, [c.id]: false })); setReplyDrafts((m) => ({ ...m, [c.id]: '' })); }}
+                        className="text-[11px] text-gray-500 hover:text-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <div className="text-[10px] text-gray-500">{(replyDrafts[c.id] || '').length}/300</div>
+                    </div>
+                  </div>
+                )}
+
                 {Array.isArray(c.replies) && c.replies.length > 0 && (
-                  <ul className="mt-3 space-y-3 pl-3 border-l">
+                  <ul className="mt-3 space-y-3 pl-3 border-l border-gray-200">
                     {c.replies.map((r) => (
                       <li key={r.id} className="">
                         <div className="text-xs text-gray-800 font-medium flex items-center gap-2">
@@ -226,8 +288,23 @@ export default function LikeCommentPanel({ slug, likedByMe, likeCount, commentCo
                             <span title="Editor" className="text-[9px] font-semibold bg-blue-600 text-white px-1.5 py-0.5 rounded-full">EDITOR</span>
                           )}
                         </div>
-                        <div className="text-[10px] text-gray-500">{new Date(r.created_date).toLocaleString()}</div>
+                        <div className="text-[10px] text-gray-500">{timeAgo(r.created_date)}</div>
                         <p className="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{r.content}</p>
+                        <div className="mt-2 flex items-center gap-3 text-xs">
+                          <button
+                            onClick={() => toggleCommentLike(r.id)}
+                            disabled={!isAuthenticated}
+                            className="inline-flex items-center gap-1 text-gray-700 hover:text-red-600 disabled:opacity-50"
+                            aria-pressed={!!r.liked_by_me}
+                          >
+                            {r.liked_by_me ? (
+                              <HeartSolid className="h-4 w-4 text-red-600" />
+                            ) : (
+                              <HeartOutline className="h-4 w-4" />
+                            )}
+                            <span>{r.like_count ?? 0}</span>
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
