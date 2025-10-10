@@ -20,12 +20,7 @@ export default function LoginPage() {
       const success = await login(username, password);
       if (success) {
         if (typeof window !== 'undefined') {
-          // Return user to previous page if possible, else home
-          if (document.referrer && new URL(document.referrer).origin === window.location.origin) {
-            window.history.back();
-          } else {
-            window.location.href = '/';
-          }
+          window.location.href = '/';
         }
       } else {
         setError('Invalid username or password');

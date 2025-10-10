@@ -28,6 +28,11 @@
   --color-accent-light: var(--accent-light);
   --color-cta: var(--cta);
   --color-cta-darken: var(--cta-darken);
+  --color-white: var(--white);
+  --color-cream: var(--cream);
+  --color-primary-lighten: var(--primary-lighten);
+  --color-accent-darken: var(--accent-darken);
+  --color-cta-darken: var(--cta-darken);
   --font-sans: ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -41,7 +46,6 @@ body {
 /* Base typography */
 h1, h2, h3 {
   font-family: var(--font-sans);
-
 }
 
 h1 {
@@ -49,6 +53,7 @@ h1 {
   font-size: 1.85rem; /* 28px */
   font-weight: 800;
   line-height: 1.1;
+  color : #333333;
 }
 
 h2 {
@@ -96,6 +101,25 @@ footer a:hover {
   font-weight: 700;
   color: var(--secondary);
   line-height: 1.2;
+}
+
+/* Link underline animation for nav items (opt-in via class) */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 150ms ease-out;
+}
+.nav-link:hover::after,
+.nav-link[aria-current="page"]::after {
+  width: 100%;
 }
 
 /* Rich text content image styles (centered and responsive) */

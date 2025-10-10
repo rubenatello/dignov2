@@ -24,17 +24,17 @@ export default function TopBar() {
   }, []);
 
   return (
-    <div className="hidden md:block bg-primary border-b border-gray-200">
+  <div className="hidden md:block bg-primary border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-2">
         <div className="flex justify-between items-center text-sm">
           <div className="flex space-x-6">
             <span className="text-accent">{formatted ? formatted : ''}</span>
           </div>
-          <div className="flex space-x-4">
-            <Link href="/subscribe" className="bg-cta text-white px-4 py-1 rounded text-sm font-medium hover:bg-cta-darken">
+          <div className="flex space-x-3">
+            <Link href="/subscribe" className="inline-flex items-center justify-center h-8 px-4 rounded-md bg-cta text-white hover:bg-cta-darken transition-colors text-sm font-medium">
               SUBSCRIBE
             </Link>
-            <Link href="/login" className="bg-accent px-4 py-1 rounded text-primary hover:bg-gray-200 font-medium">
+            <Link href="/login" className="inline-flex items-center justify-center h-8 px-4 rounded-md border border-gray-300 bg-white text-primary hover:bg-gray-50 transition-colors text-sm font-medium">
               LOG IN
             </Link>
           </div>

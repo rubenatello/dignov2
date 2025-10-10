@@ -33,6 +33,11 @@ export default function SignUpPage() {
       if (data?.token) {
         localStorage.setItem('token', data.token);
       }
+      // Redirect to home
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+        return;
+      }
       setSuccess('Account created! You are now signed in.');
     } catch (err: any) {
       const msg = err?.response?.data ? JSON.stringify(err.response.data) : 'Registration failed';

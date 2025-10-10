@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from .health import healthz
 
 # Customize admin site
 admin.site.site_header = "Digno Writer Dashboard"
@@ -14,6 +15,7 @@ admin.site.index_title = "Welcome to your writing dashboard"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('healthz', healthz),
     path('api/', include('articles.urls')),
     path('api/', include('donations.urls')),
     path('api/', include('users.urls')),

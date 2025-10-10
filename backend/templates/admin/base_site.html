@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{# Override the block to inject a custom favicon #}
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="icon" href="{% static 'favicon.png' %}" type="image/png" />
+  <link rel="shortcut icon" href="{% static 'favicon.png' %}" type="image/png" />
+{% endblock %}

@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: digno
+      POSTGRES_USER: digno
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-digno123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: ./backend
+    environment:
+      - DEBUG=0
+      - DATABASE_URL=postgresql://digno:${POSTGRES_PASSWORD:-digno123}@db:5432/digno
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - SECRET_KEY=${SECRET_KEY}
+      - DRF_THROTTLE_ANON=60/min
+      - DRF_THROTTLE_USER=240/min
+    depends_on:
+      - db
+    volumes:
+      - ./backend/media:/app/media
+      - staticfiles:/app/staticfiles
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    environment:
+      - NODE_ENV=production
+      - DOCKER=true
+      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://web:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  staticfiles:

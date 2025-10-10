@@ -6,6 +6,11 @@ import { ToastContainer } from "@/components/ui/Toast";
 export const metadata: Metadata = {
   title: "Digno - Quality Journalism",
   description: "Independent news platform with integrity and dignity",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

@@ -4,12 +4,13 @@ import SearchBar from './SearchBar';
 
 interface MainHeaderProps {
   onMobileMenuToggle: () => void;
+  compact?: boolean;
 }
 
-export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
+export default function MainHeader({ onMobileMenuToggle, compact = false }: MainHeaderProps) {
   return (
-    <div className="max-w-7xl mx-auto px-4">
-  <div className="flex items-center justify-center py-4 md:justify-center">
+    <div className="max-w-7xl mx-auto px-4 transition-all">
+  <div className={`flex items-center justify-center ${compact ? 'py-2' : 'py-4'} md:justify-center transition-all`}>
         {/* Mobile Menu Button */}
         <button 
           className="md:hidden p-2"
@@ -28,7 +29,7 @@ export default function MainHeader({ onMobileMenuToggle }: MainHeaderProps) {
               alt="Digno" 
               width={200} 
               height={200}
-              className="h-20 w-auto"
+              className={`${compact ? 'h-16' : 'h-20'} w-auto transition-all`}
             />
           </Link>
         </div>

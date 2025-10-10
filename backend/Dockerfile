@@ -17,11 +17,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Copy entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose port
 EXPOSE 8000
 
-# Run the Django development server for local development
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Default command starts entrypoint which decides between runserver and gunicorn
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

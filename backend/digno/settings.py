@@ -1,4 +1,4 @@
-# Logging configuration for debug visibility
+# Logging configuration (adjusted by DEBUG below)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -20,7 +20,7 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',
+        'level': 'DEBUG',  # will be set to INFO when DEBUG=False below
     },
     'loggers': {
         'digno.articles.permissions': {
@@ -44,18 +44,26 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 
-# Allow all hosts in dev for Codespaces proxy
-ALLOWED_HOSTS = ["*"]
+# Hosts: default to * in dev; allow env override (CSV) for prod
+from decouple import config as _cfg
+_hosts_env = _cfg('ALLOWED_HOSTS', default='*')
+if _hosts_env.strip() == '*':
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = [h.strip() for h in _hosts_env.split(',') if h.strip()]
 
 
 
-# Add Codespaces domains for CSRF protection
+# CSRF trusted origins (dev defaults + optional env CSV)
 CSRF_TRUSTED_ORIGINS = [
     'https://*.app.github.dev',
     'https://*.githubpreview.dev',
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+_csrf_env = _cfg('CSRF_TRUSTED_ORIGINS', default='')
+if _csrf_env:
+    CSRF_TRUSTED_ORIGINS.extend([o.strip() for o in _csrf_env.split(',') if o.strip()])
 
 # Disable HTTPS redirect in dev to avoid proxy issues
 SECURE_SSL_REDIRECT = False
@@ -250,24 +258,39 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': config('DRF_THROTTLE_ANON', default='30/min'),
+        'user': config('DRF_THROTTLE_USER', default='120/min'),
+    },
 }
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+# CORS settings (default for dev; optional env CSV for prod)
+_cors_env = _cfg('CORS_ALLOWED_ORIGINS', default='')
+if _cors_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
-# Enable cross-origin cookies for session authentication
-SESSION_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SAMESITE = "None"
-CSRF_COOKIE_SECURE = True
+# Cookies for cross-site auth: allow env overrides for production
+SESSION_COOKIE_SAMESITE = config('SESSION_COOKIE_SAMESITE', default="None")
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_SAMESITE = config('CSRF_COOKIE_SAMESITE', default="None")
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
 
 # Allow all origins in development for debugging
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
+    LOGGING['root']['level'] = 'DEBUG'
+else:
+    LOGGING['root']['level'] = 'INFO'
 
 if not DEBUG:
     CORS_ALLOWED_ORIGINS.extend(
@@ -300,6 +323,8 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    if not ALLOWED_HOSTS:
+        ALLOWED_HOSTS = ['localhost']
     
 # Stripe settings
 STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')

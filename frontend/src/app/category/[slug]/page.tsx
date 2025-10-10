@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, use } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -25,8 +25,8 @@ function toTitle(slug: string) {
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const categoryEnum = CATEGORY_SLUG_TO_ENUM[slug];
 
   const [items, setItems] = useState<ArticleListItem[]>([]);

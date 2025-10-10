@@ -22,15 +22,16 @@ export default function MobileMenu({ isOpen, onItemClick }: MobileMenuProps) {
 
   return (
     <div className="md:hidden bg-white border-t border-gray-200 rounded-lg shadow-lg max-w-full mx-auto mt-2">
-      {/* Mobile Header: Search, Subscribe, Login on one row evenly spaced */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 gap-2">
-        <div className="flex-1 flex justify-center">
-          <div className="w-full flex justify-center">
-            <SearchBar onClose={onItemClick} />
-          </div>
+      {/* Mobile Header: Search full width */}
+      <div className="px-4 py-3 border-b border-gray-100">
+        <SearchBar onClose={onItemClick} />
+      </div>
+      {/* Actions */}
+      <div className="px-4 py-3 border-b border-gray-100">
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/subscribe" className="inline-flex items-center justify-center h-10 rounded-md bg-cta text-white hover:bg-cta-darken transition-colors text-sm font-medium text-center">SUBSCRIBE</Link>
+          <Link href="/login" className="inline-flex items-center justify-center h-10 rounded-md border border-gray-300 bg-white text-primary hover:bg-gray-50 transition-colors text-sm font-medium text-center">LOG IN</Link>
         </div>
-  <Link href="/subscribe" className="bg-cta text-white px-4 py-2 rounded text-sm font-semibold flex-1 mx-2 text-center">SUBSCRIBE</Link>
-  <Link href="/login" className="text-gray-700 hover:text-black font-medium px-4 py-2 rounded text-sm flex-1 mx-2 text-center">LOG IN</Link>
       </div>
       {/* Menu Items */}
       <div className="px-4 py-2 space-y-1">

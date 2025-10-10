@@ -3,8 +3,8 @@
 
 ## UI/UX Improvement Plan (Studio Writer)
 
-- [] Analytics and graphs in /Dashboard/Editor page that renders trending articles, trending tags, most viewed article, most viewed writer and able to filter by custom date range, 7d, 30d, 90d, ytd. 
-- [] s
+- [x] Analytics and graphs in /Dashboard/Editor page that renders trending articles, trending tags, most viewed article, most viewed writer and able to filter by custom date range, 7d, 30d, 90d, ytd. 
+- [] 
 
 ## Notes
 - All work should be done in Docker Compose for consistency

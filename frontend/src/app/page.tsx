@@ -10,6 +10,8 @@ import api from '../lib/api'; // <-- use the axios client
 import { fixMediaUrl } from '@/lib/media';
 import { fetchArticlesList, fetchBreakingList } from '@/services/articles';
 import BreakingBar from '@/components/BreakingBar';
+import HeadlineSummaryCarousel from '@/components/HeadlineSummaryCarousel';
+import HeadlineTilesCarousel from '@/components/HeadlineTilesCarousel';
 import type { ArticleListItem } from '@/types/home';
 
 type Article = ArticleListItem;
@@ -228,6 +230,7 @@ export default function Home() {
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-8">
   <BreakingBar items={breakingNews} />
+  <HeadlineTilesCarousel items={articles.slice(0, 12)} intervalMs={10000} heightPx={150} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <div className="lg:col-span-2">
             <FeaturedArticle article={featuredArticle} />

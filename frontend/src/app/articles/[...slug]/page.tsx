@@ -5,8 +5,10 @@ import api from '@/lib/api';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { fixMediaUrl, fixHtmlMediaUrls } from '@/lib/media';
-import LikeCommentPanel from '@/components/LikeCommentPanel';
+import { fixHtmlMediaUrls } from '@/lib/media';
+import ArticleEngagement from '@/components/ArticleEngagement';
+import MoreInCategorySidebar from '@/components/MoreInCategorySidebar';
+import ArticleHero from '@/components/ArticleHero';
 
 type Article = {
   id: number;
@@ -94,29 +96,13 @@ export default function ArticleLivePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Main article */}
               <article className="lg:col-span-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-1">{article.title}</h1>
-                {article.subtitle && (
-                  <h2 className="text-xs md:text-sm leading-snug font-normal text-slate-600 mb-2">{article.subtitle}</h2>
-                )}
-                {(() => {
-                  const data = (article as any).featured_image_data;
-                  const imgSrc = fixMediaUrl(data?.url || article.featured_image || '');
-                  return imgSrc ? (
-                    <figure className="mb-6">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={imgSrc} alt={article.title} className="w-full rounded-lg" />
-                      {data?.caption && (
-                        <figcaption className="text-xs text-slate-500 mt-2 text-center">{data.caption}</figcaption>
-                      )}
-                    </figure>
-                  ) : null;
-                })()}
-                {article.summary && (
-                  <div className="bg-gray-100 border border-gray-200 text-slate-900 text-sm rounded p-3 mb-6">
-                    <span className="font-semibold mr-2">TL;DR</span>
-                    <span className="align-middle">{article.summary}</span>
-                  </div>
-                )}
+                <ArticleHero
+                  title={article.title}
+                  subtitle={article.subtitle}
+                  featured_image={article.featured_image}
+                  featured_image_data={(article as any).featured_image_data}
+                  summary={article.summary}
+                />
                 {/* Byline and dates */}
                 <div className="mb-6 text-sm text-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
                   {(() => {
@@ -159,7 +145,7 @@ export default function ArticleLivePage() {
                 </div>
 
                 {/* Engagement */}
-                <LikeCommentPanel
+                <ArticleEngagement
                   slug={article.slug}
                   likedByMe={article.liked_by_me}
                   likeCount={article.like_count}
@@ -168,29 +154,7 @@ export default function ArticleLivePage() {
               </article>
 
               {/* Sidebar feed */}
-              <aside className="lg:col-span-4">
-                <div className="sticky top-6">
-                  <h2 className="text-lg font-semibold text-slate-800 mb-3">
-                    More in {categoryLabel || 'this category'}
-                  </h2>
-                  {related.length === 0 ? (
-                    <div className="text-sm text-slate-500">No related articles found.</div>
-                  ) : (
-                    <ul className="space-y-3">
-                      {related.map((r) => (
-                        <li key={r.id} className="border-b last:border-b-0 pb-3">
-                          <Link href={`/articles/${r.slug}`} className="text-slate-800 hover:text-primary font-medium">
-                            {r.title}
-                          </Link>
-                          {r.published_date && (
-                            <div className="text-xs text-slate-500 mt-1">{new Date(r.published_date).toLocaleDateString()}</div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </aside>
+              <MoreInCategorySidebar label={categoryLabel} items={related} />
             </div>
           )}
         </div>

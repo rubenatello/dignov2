@@ -71,7 +71,11 @@ class ArticleListSerializer(serializers.ModelSerializer):
         return getattr(obj, 'likes', None).count() if hasattr(obj, 'likes') else obj.likes.count() if hasattr(obj, 'likes') else 0
 
     def get_comment_count(self, obj):
-        return getattr(obj, 'comments', None).count() if hasattr(obj, 'comments') else obj.comments.count() if hasattr(obj, 'comments') else 0
+        # Count top-level comments only, to match the list endpoint
+        try:
+            return obj.comments.filter(parent__isnull=True).count()
+        except Exception:
+            return 0
     
     class Meta:
         model = Article
@@ -108,7 +112,8 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         return obj.likes.count()
 
     def get_comment_count(self, obj):
-        return obj.comments.count()
+        # Count top-level comments only, to match the list endpoint
+        return obj.comments.filter(parent__isnull=True).count()
 
     def get_liked_by_me(self, obj):
         request = self.context.get('request')
