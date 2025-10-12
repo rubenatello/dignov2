@@ -1,36 +1,3 @@
-## Kno**September 26, 2025 - CUSTOM RICH TEXT EDITOR IMPLEMENTATION ✅ COMPLETED**
-- Successfully replaced Tiptap and Quill with a custom-built rich text editor
-- Reason: Both Tiptap and Quill had React 19 compatibility issues and external dependency conflicts
-- Solution: Built a robust custom editor using native browser APIs (contentEditable + document.execCommand)
-- Features: Full rich text functionality including headings, formatting, lists, alignment, links, undo/redo
-- Benefits: Zero external dependencies, perfect React 19/Next.js 15 compatibility, lightweight, maintainable
-- Impact: Removed all external editor dependencies (quill, react-quill, @tiptap packages)
-- Status: ✅ COMPLETED - Custom RichTextEditor successfully integrated and testedues
-
-## Known Issues
-
-~~- As of September 24, 2025, the ContentEditor (Tiptap) in the Studio page is not editable (cannot type in the main editor area). This is likely due to a React hydration or Tiptap initialization issue. The toolbar and UI render, but typing is not possible. This needs to be debugged and fixed after API/backend integration is solid.~~
-
-**✅ RESOLVED September 26, 2025**: All editor issues resolved with custom RichTextEditor implementation. The Studio editor is now fully functional with rich text capabilities and perfect React 19 compatibility.
-
-## Major Architecture Changes
-
-**September 25, 2025 - APPROVED SWITCH FROM TIPTAP TO QUILL ✅ COMPLETED + UI REFINEMENTS**
-- User approved switching from Tiptap to Quill for the Studio content editor
-- Reason: Tiptap required extensive custom CSS and toolbar configuration, while Quill provides professional UI out-of-the-box
-- Goal: Achieve Substack-like editor experience with clean styling and reliable formatting
-- Impact: Frontend package.json changes, new QuillEditor component, removal of Tiptap dependencies
-- Status: ✅ COMPLETED - QuillEditor successfully integrated, React 19 compatibility resolved with direct Quill.js implementation
-
-**UI Refinements Completed:**
-- ✅ Removed clashing blue sidebar border line for cleaner look
-- ✅ Fixed duplicate toolbar issue (only one toolbar now shows)  
-- ✅ Added image functionality with library modal and upload options
-- ✅ Removed gray border lines from content editor for cleaner appearance
-- ✅ Enhanced toolbar with image insertion capability
-- ✅ Added matching light blue gradient background (same as loading page)
-- ✅ Removed heavy shadow and rounded corners for unified form appearance
-- ✅ Fixed Quill editor initialization to prevent duplicate toolbars
 
 # Digno Dev Notes
 
@@ -134,3 +101,16 @@ Outside Docker (future optional improvement): allow `NEXT_PUBLIC_API_URL` or fal
 - See `frontend/next.config.mjs` for Next.js rewrite rules (used for local/dev, not Docker).
 
 Always consult this `notes.txt` before starting or troubleshooting.
+
+## October 11, 2025 - API 500 Error: Incorrect Frontend API Configuration
+- Cause: Frontend API client was using Next.js rewrites (`/api/`) instead of direct backend URL (`http://web:8000/api/`) in Docker environment. Next.js rewrites don't work reliably for container-to-container communication.
+- Root Issue: The frontend `api.ts` was hardcoded to use `/api/` baseURL, but Docker containers need direct service URLs for reliable networking.
+- Solution: Updated `frontend/src/lib/api.ts` to detect Docker environment and use `http://web:8000/api/` directly when `DOCKER=true`, falling back to `/api/` rewrites for local development.
+- Backend Verification: `curl http://web:8000/api/articles/` returns 200 OK with valid JSON - backend was working correctly.
+- Status: ✅ FIXED
+
+## Docker API Communication Best Practices
+- ✅ In Docker: Frontend should use direct backend service URLs (`http://web:8000/api/`)
+- ✅ Outside Docker: Frontend can use Next.js rewrites (`/api/` → `http://localhost:8000/api/`)
+- ✅ Always verify backend endpoints work with direct curl before debugging frontend
+- ✅ Use environment detection to switch between Docker and local development modes

@@ -63,7 +63,6 @@ export default function HeadlineSummaryCarousel({ items, intervalMs = 5000 }: Pr
       {active.summary && (
         <div className="p-4 md:p-5 bg-background">
           <div className="text-sm text-slate-800">
-            <span className="font-semibold mr-2">TL;DR</span>
             <span className="align-middle">{active.summary}</span>
           </div>
         </div>

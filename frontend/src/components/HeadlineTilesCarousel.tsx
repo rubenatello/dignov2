@@ -83,7 +83,6 @@ export default function HeadlineTilesCarousel({ items, intervalMs = 10000, heigh
         {/* TL;DR under each tile (desktop too) */}
         {item.summary && (
           <div className="mt-1 text-[11px] leading-snug text-slate-700 line-clamp-2">
-            <span className="font-semibold mr-1">TL;DR</span>
             <span>{item.summary}</span>
           </div>
         )}
