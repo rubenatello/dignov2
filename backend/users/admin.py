@@ -22,21 +22,33 @@ class UserAdmin(BaseUserAdmin):
         # Check both role and group membership
         return (
             user.is_superuser or
+            user.is_staff or  # Added is_staff check
             getattr(user, 'role', None) == 'editor' or
             user.groups.filter(name='editor').exists()
         )
 
     def has_module_permission(self, request):
+        # Let Django handle default admin permissions for superusers and staff
+        if request.user.is_superuser:
+            return True
         return self._is_editor_or_superuser(request.user)
 
     def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
         return self._is_editor_or_superuser(request.user)
 
     def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
         return self._is_editor_or_superuser(request.user)
 
     def has_add_permission(self, request):
+        if request.user.is_superuser:
+            return True
         return self._is_editor_or_superuser(request.user)
 
     def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
         return self._is_editor_or_superuser(request.user)

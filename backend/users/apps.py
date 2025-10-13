@@ -6,6 +6,5 @@ class UsersConfig(AppConfig):
     name = "users"
 
     def ready(self):
-        from django.contrib.auth.models import Group
-        for role in ["subscriber", "writer", "editor"]:
-            Group.objects.get_or_create(name=role)
+        # Import signals to register them
+        from . import signals
