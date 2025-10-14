@@ -164,6 +164,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Also collect the repository-level static directory (../static)
+STATICFILES_DIRS = [
+    BASE_DIR.parent / 'static',
+]
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
