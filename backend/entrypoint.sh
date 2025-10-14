@@ -14,9 +14,12 @@ echo "Running migrations..."
 python manage.py migrate --noinput || { echo "Migration failed"; exit 1; }
 echo "Migrations completed successfully"
 
-echo "Skipping collectstatic for development..."
-# python manage.py collectstatic --noinput || { echo "Collectstatic failed"; exit 1; }
-echo "Static files collection skipped"
+if [ "$DEBUG" = "1" ] || [ "$DEBUG" = "true" ]; then
+  echo "DEBUG mode: skipping collectstatic"
+else
+  echo "Collecting static files..."
+  python manage.py collectstatic --noinput || { echo "Collectstatic failed"; exit 1; }
+fi
 
 if [ "$DEBUG" = "1" ] || [ "$DEBUG" = "true" ]; then
   echo "Starting Django dev server..."
