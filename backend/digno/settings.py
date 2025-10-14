@@ -46,7 +46,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Hosts: default to * in dev; allow env override (CSV) for prod
 from decouple import config as _cfg
-_hosts_env = _cfg('ALLOWED_HOSTS', default='*')
+_hosts_env = _cfg('ALLOWED_HOSTS', default='localhost,127.0.0.1,dignov2.onrender.com')
 if _hosts_env.strip() == '*':
     ALLOWED_HOSTS = ["*"]
 else:
